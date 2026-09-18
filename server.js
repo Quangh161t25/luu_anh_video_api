@@ -180,29 +180,76 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // API Proxy Upload Catbox qua Server (tránh lỗi CORS)
-  if (req.method === 'POST' && req.url === '/api/catbox-upload') {
+  // API Upload Catbox qua Server sử dụng node-catbox (100% không lỗi CORS)
+  if (req.method === 'POST' && req.url.startsWith('/api/catbox-upload')) {
     const contentType = req.headers['content-type'] || '';
+    const boundaryMatch = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
+    const boundary = boundaryMatch ? (boundaryMatch[1] || boundaryMatch[2]) : '';
     const chunks = [];
     req.on('data', chunk => chunks.push(chunk));
     req.on('end', async () => {
       try {
         const buffer = Buffer.concat(chunks);
-        const catboxRes = await fetch('https://catbox.moe/user/api.php', {
-          method: 'POST',
-          headers: { 'Content-Type': contentType },
-          body: buffer
-        });
-        const text = await catboxRes.text();
+        let userhash = '';
+        let fileData = null;
+        let filename = 'file.dat';
+
+        if (boundary) {
+          const boundaryBuf = Buffer.from('--' + boundary);
+          let pos = 0;
+          while (pos < buffer.length) {
+            const next = buffer.indexOf(boundaryBuf, pos);
+            if (next === -1) break;
+            const headerEnd = buffer.indexOf(Buffer.from('\r\n\r\n'), next);
+            if (headerEnd !== -1) {
+              const head = buffer.slice(next, headerEnd).toString();
+              const partEnd = buffer.indexOf(boundaryBuf, headerEnd + 4);
+              if (partEnd !== -1) {
+                const partContent = buffer.slice(headerEnd + 4, partEnd - 2);
+                if (head.includes('name="userhash"')) {
+                  userhash = partContent.toString().trim();
+                } else if (head.includes('name="fileToUpload"')) {
+                  fileData = partContent;
+                  const fnMatch = head.match(/filename="([^"]+)"/);
+                  if (fnMatch) filename = fnMatch[1];
+                }
+              }
+            }
+            pos = next + boundaryBuf.length;
+          }
+        }
+
+        if (!fileData) fileData = buffer;
+
+        const tempPath = path.join(UPLOAD_DIR, `temp_${Date.now()}_${filename}`);
+        fs.writeFileSync(tempPath, fileData);
+
+        let fileUrl = '';
+        try {
+          const { Catbox } = require('node-catbox');
+          const catbox = new Catbox(userhash || undefined);
+          fileUrl = await catbox.uploadFile({ path: tempPath });
+        } catch (catErr) {
+          const form = new FormData();
+          form.append('reqtype', 'fileupload');
+          if (userhash) form.append('userhash', userhash);
+          form.append('fileToUpload', new Blob([fileData]), filename);
+          const rawRes = await fetch('https://catbox.moe/user/api.php', { method: 'POST', body: form });
+          fileUrl = (await rawRes.text()).trim();
+        } finally {
+          if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+        }
+
         res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-        res.end(text);
+        res.end(fileUrl);
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
-        res.end('Lỗi proxy Catbox: ' + err.message);
+        res.end('Lỗi Catbox: ' + err.message);
       }
     });
     return;
   }
+
 
   // API lưu thông tin vào Google Sheet từ Web Client
   if (req.method === 'POST' && req.url === '/api/save-to-sheet') {
