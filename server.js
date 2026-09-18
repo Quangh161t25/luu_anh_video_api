@@ -180,6 +180,30 @@ const server = http.createServer((req, res) => {
     }
   }
 
+  // API Proxy Upload Catbox qua Server (tránh lỗi CORS)
+  if (req.method === 'POST' && req.url === '/api/catbox-upload') {
+    const contentType = req.headers['content-type'] || '';
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
+    req.on('end', async () => {
+      try {
+        const buffer = Buffer.concat(chunks);
+        const catboxRes = await fetch('https://catbox.moe/user/api.php', {
+          method: 'POST',
+          headers: { 'Content-Type': contentType },
+          body: buffer
+        });
+        const text = await catboxRes.text();
+        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end(text);
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('Lỗi proxy Catbox: ' + err.message);
+      }
+    });
+    return;
+  }
+
   // API lưu thông tin vào Google Sheet từ Web Client
   if (req.method === 'POST' && req.url === '/api/save-to-sheet') {
     let body = '';

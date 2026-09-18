@@ -1174,19 +1174,24 @@
       return new Promise((resolve, reject) => {
         if (selectedFile.size > 200 * 1024 * 1024) {
           setLoading(false);
-          alert("⚠️ Catbox.moe chỉ hỗ trợ file tối đa 200MB! Với file lớn hơn, hãy chọn Litterbox (đến 1GB) hoặc Cloudinary / Supabase.");
+          alert("⚠️ Catbox.moe chỉ hỗ trợ file tối đa 200MB! Với file lớn hơn, hãy chọn Cloudinary hoặc Supabase.");
           return;
         }
 
         const userhash = document.getElementById('catbox_userhash')?.value?.trim() || '';
-        const url = "https://catbox.moe/user/api.php";
         const formData = new FormData();
         formData.append("reqtype", "fileupload");
         if (userhash) formData.append("userhash", userhash);
         formData.append("fileToUpload", selectedFile);
 
+        // Nếu đang mở trên localhost, dùng proxy cục bộ để vượt qua CORS của trình duyệt
+        let targetUrl = "https://catbox.moe/user/api.php";
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          targetUrl = "http://localhost:5000/api/catbox-upload";
+        }
+
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", url, true);
+        xhr.open("POST", targetUrl, true);
         bindProgress(xhr, "Đang tải lên Catbox.moe (Vĩnh Viễn)");
 
         xhr.onload = () => {
@@ -1196,10 +1201,13 @@
             reject(new Error("Lỗi tải lên Catbox.moe: " + xhr.responseText));
           }
         };
-        xhr.onerror = () => reject(new Error("Lỗi kết nối tới Catbox API!"));
+        xhr.onerror = () => {
+          reject(new Error("Máy chủ Catbox.moe chặn tải trực tiếp từ trình duyệt web (CORS Policy) khi mở trên GitHub Pages.\n\n👉 GIẢI PHÁP TỐT NHẤT: Hãy chọn nền tảng 'Cloudinary' (Vĩnh viễn, CDN siêu tốc, không bị chặn) hoặc mở qua 'http://localhost:5000'!"));
+        };
         xhr.send(formData);
       });
     }
+
 
     // 3. LITTERBOX UPLOAD (LƯU TẠM THỜI 1H / 24H / 72H - TỐI ĐA 1GB)
     function uploadLitterbox() {
