@@ -1,0 +1,6 @@
+node_modules/
+uploads/*
+!uploads/.gitkeep
+service_account.json
+.DS_Store
+Thumbs.db

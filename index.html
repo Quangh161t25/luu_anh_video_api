@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Media & File Cloud Hub - Tải Video, Ảnh, PDF & Tự Động Lưu Google Sheet</title>
+  <!-- Google Fonts & Lucide Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --success: #10b981;
+      --success-hover: #059669;
+      --bg: #0b0f19;
+      --card-bg: #151c2e;
+      --card-border: #263352;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --input-bg: #0b0f19;
+      --input-border: #334155;
+      --accent: #38bdf8;
+      --sheet-green: #0f9d58;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      background-image: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.18), transparent 50%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 780px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .header .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a5b4fc 0%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Google Sheet Connect Box */
+    .sheet-box {
+      background: rgba(15, 157, 88, 0.08);
+      border: 1px solid rgba(15, 157, 88, 0.35);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .sheet-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sheet-status {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .sheet-status:hover {
+      background: rgba(16, 185, 129, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .sheet-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sheet-inputs label {
+      font-size: 12px;
+      color: #cbd5e1;
+      font-weight: 600;
+    }
+
+    .sheet-inputs input {
+      width: 100%;
+      padding: 10px 14px;
+      background: #0b0f19;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #38bdf8;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .sheet-inputs input:focus {
+      border-color: #10b981;
+    }
+
+    /* Platform Grid */
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #cbd5e1;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .platform-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .platform-card {
+      background: var(--input-bg);
+      border: 2px solid var(--input-border);
+      border-radius: 12px;
+      padding: 14px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .platform-card:hover {
+      border-color: #6366f1;
+      background: rgba(99, 102, 241, 0.06);
+      transform: translateY(-2px);
+    }
+
+    .platform-card.active {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+    }
+
+    .platform-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .platform-name {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .tag-perm { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .tag-temp { background: rgba(234, 179, 8, 0.2); color: #facc15; }
+
+    .platform-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Config boxes */
+    .config-box {
+      display: none;
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .config-box.open {
+      display: block;
+    }
+
+    .config-box h4 {
+      font-size: 13px;
+      color: #38bdf8;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px 14px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: #6366f1;
+    }
+
+    /* Dropzone */
+    .dropzone {
+      border: 2px dashed #4338ca;
+      border-radius: 16px;
+      padding: 32px 20px;
+      text-align: center;
+      background: rgba(99, 102, 241, 0.03);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      border-color: #818cf8;
+      background: rgba(99, 102, 241, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .dropzone .icon-wrap {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .dropzone p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .dropzone p strong {
+      color: var(--text-main);
+    }
+
+    .dropzone input[type="file"] {
+      display: none;
+    }
+
+    /* Selected File Preview */
+    .file-preview-card {
+      display: none;
+      margin-top: 14px;
+      padding: 12px 16px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 12px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .file-preview-card .file-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #34d399;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-preview-card .file-size {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .type-badge {
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+
+    /* Upload Button */
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s;
+      margin-top: 18px;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-submit:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:disabled {
+      background: #334155;
+      color: #64748b;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* Progress bar */
+    .progress-container {
+      display: none;
+      margin-top: 18px;
+      background: rgba(11, 15, 25, 0.8);
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: #1e293b;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #6366f1, #38bdf8, #10b981);
+      border-radius: 6px;
+      transition: width 0.2s ease;
+    }
+
+    /* Result Card */
+    .result-card {
+      display: none;
+      margin-top: 24px;
+      padding: 20px;
+      background: #0f172a;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      border-radius: 16px;
+      animation: fadeIn 0.35s ease;
+      box-shadow: 0 10px 30px rgba(16, 185, 129, 0.1);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--success);
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .sheet-sync-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 8px;
+      color: #34d399;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .link-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .link-row input {
+      flex: 1;
+      min-width: 250px;
+      padding: 10px 14px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #38bdf8;
+      font-family: monospace;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .btn-action {
+      padding: 0 16px;
+      height: 40px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .btn-copy { background: var(--success); color: white; }
+    .btn-copy:hover { background: var(--success-hover); }
+
+    .btn-visit { background: var(--primary); color: white; }
+    .btn-visit:hover { background: var(--primary-hover); }
+
+    .btn-sheet { background: var(--sheet-green); color: white; }
+    .btn-sheet:hover { opacity: 0.9; }
+
+    .media-preview-wrap {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      background: #000;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    video, img {
+      max-width: 100%;
+      max-height: 320px;
+      display: inline-block;
+      border-radius: 8px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      background: #10b981;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      display: none;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <div class="badge">
+        <i data-lucide="sheet" style="width: 15px; height: 15px;"></i>
+        <span>AUTO SYNC GOOGLE SHEET (DATA)</span>
+      </div>
+      <h1>Tải Video, Ảnh & PDF $\rightarrow$ Tự Động Lưu Google Sheet</h1>
+      <p>Lưu trữ đám mây qua API $\rightarrow$ Tự động phân loại định dạng và lưu vào Google Sheet <code>DATA</code></p>
+    </div>
+
+    <div class="card">
+      <!-- GOOGLE SHEET CONFIGURATION -->
+      <div class="sheet-box">
+        <div class="sheet-header">
+          <span class="sheet-title">
+            <i data-lucide="table-2" style="width: 18px; height: 18px;"></i>
+            Google Sheet: <code>luu_anh_video_api (Sheet: DATA)</code>
+          </span>
+          <div style="display: flex; gap: 8px;">
+            <button onclick="testGoogleSheetSync()" class="sheet-status" style="border: 1px solid #10b981; cursor: pointer; background: rgba(16, 185, 129, 0.25);">
+              <i data-lucide="zap" style="width: 12px; height: 12px;"></i> Test Kết Nối Sheet
+            </button>
+            <a href="https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/edit?gid=0#gid=0" target="_blank" class="sheet-status" style="text-decoration: none;">
+              <i data-lucide="external-link" style="width: 12px; height: 12px;"></i> Mở Sheet DATA
+            </a>
+          </div>
+        </div>
+        
+        <div class="sheet-inputs">
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px dashed rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; flex-wrap: wrap; gap: 6px;">
+            <span style="color: #34d399; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="check-circle-2" style="width: 16px; height: 16px;"></i>
+              Đã kết nối Service Account: <code>ca-nhan@h161-508101.iam.gserviceaccount.com</code>
+            </span>
+            <span style="color: #94a3b8; font-size: 11px;">7 Cột: id, ngay, ngay_gio, dinh_dang, link, tên, ghi chú</span>
+          </div>
+
+          <div>
+            <label style="font-size: 11px; color: #94a3b8;">Google Apps Script Web App URL (Dự phòng nếu không chạy server cục bộ):</label>
+            <input type="url" id="sheet_webapp_url" placeholder="https://script.google.com/macros/s/.../exec" onchange="saveConfig()">
+          </div>
+        </div>
+      </div>
+
+      <!-- PLATFORM SELECTOR -->
+      <div class="section-title">
+        <i data-lucide="cloud" style="width: 18px; height: 18px; color: #38bdf8;"></i>
+        <span>1. Chọn Nền Tảng Lưu Trữ (Ảnh, Video, PDF):</span>
+      </div>
+
+      <div class="platform-grid">
+        <!-- 1. Cloudinary -->
+        <div id="card-cloudinary" class="platform-card active" onclick="selectPlatform('cloudinary')">
+          <div class="platform-header">
+            <span class="platform-name">
+              <i data-lucide="sparkles" style="width: 16px; height: 16px; color: #a855f7;"></i> Cloudinary
+            </span>
+            <span class="tag tag-perm">Vĩnh Viễn</span>
+          </div>
+          <div class="platform-desc">Lưu Ảnh, Video & PDF vĩnh viễn, CDN siêu tốc (Free 25GB)</div>
+        </div>
+
+        <!-- 2. Telegram Cloud API -->
+        <div id="card-telegram" class="platform-card" onclick="selectPlatform('telegram')">
+          <div class="platform-header">
+            <span class="platform-name">
+              <i data-lucide="send" style="width: 16px; height: 16px; color: #38bdf8;"></i> Telegram API
+            </span>
+            <span class="tag tag-perm">Vĩnh Viễn</span>
+          </div>
+          <div class="platform-desc">Không giới hạn dung lượng tổng, lưu Ảnh, Video, PDF qua Bot API</div>
+        </div>
+
+        <!-- 3. Catbox / Litterbox -->
+        <div id="card-catbox" class="platform-card" onclick="selectPlatform('catbox')">
+          <div class="platform-header">
+            <span class="platform-name">
+              <i data-lucide="cat" style="width: 16px; height: 16px; color: #f43f5e;"></i> Catbox / Litter
+            </span>
+            <span class="tag tag-perm">1-3 Ngày / Mãi</span>
+          </div>
+          <div class="platform-desc">Tải nhanh mọi loại tệp Ảnh, Video, PDF, Tệp (tối đa 200MB)</div>
+        </div>
+
+        <!-- 4. DoodStream / StreamTape -->
+        <div id="card-doodstream" class="platform-card" onclick="selectPlatform('doodstream')">
+          <div class="platform-header">
+            <span class="platform-name">
+              <i data-lucide="play-circle" style="width: 16px; height: 16px; color: #eab308;"></i> DoodStream
+            </span>
+            <span class="tag tag-perm">Vĩnh Viễn</span>
+          </div>
+          <div class="platform-desc">Chuyên lưu trữ phim & video dài, không giới hạn dung lượng</div>
+        </div>
+
+        <!-- 5. Supabase / Firebase -->
+        <div id="card-supabase" class="platform-card" onclick="selectPlatform('supabase')">
+          <div class="platform-header">
+            <span class="platform-name">
+              <i data-lucide="database" style="width: 16px; height: 16px; color: #10b981;"></i> Supabase Storage
+            </span>
+            <span class="tag tag-perm">Vĩnh Viễn</span>
+          </div>
+          <div class="platform-desc">Lưu Ảnh, Video & Tài liệu trên Database PostgreSQL chuyên nghiệp</div>
+        </div>
+
+        <!-- 6. GoFile Cloud -->
+        <div id="card-gofile" class="platform-card" onclick="selectPlatform('gofile')">
+          <div class="platform-header">
+            <span class="platform-name">
+              <i data-lucide="folder-archive" style="width: 16px; height: 16px; color: #64748b;"></i> GoFile Cloud
+            </span>
+            <span class="tag tag-temp">10-30 Ngày</span>
+          </div>
+          <div class="platform-desc">Lưu file dung lượng lớn mọi định dạng không cần tạo tài khoản</div>
+        </div>
+      </div>
+
+      <!-- CONFIGURATION FORMS -->
+      <!-- Config Cloudinary -->
+      <div id="config-cloudinary" class="config-box open">
+        <h4><i data-lucide="settings" style="width: 14px; height: 14px;"></i> Cấu hình Cloudinary (Lưu Ảnh, Video & PDF):</h4>
+        <div class="form-group">
+          <label>Cloud Name:</label>
+          <input type="text" id="cld_name" placeholder="vd: qeld2qwe" value="qeld2qwe" onchange="saveConfig()">
+        </div>
+        <div class="form-group">
+          <label>Upload Preset (Unsigned):</label>
+          <input type="text" id="cld_preset" placeholder="vd: video_preset" onchange="saveConfig()">
+        </div>
+        <p style="font-size: 11px; color: #94a3b8; margin-top: 8px;">
+          💡 Tự động nhận diện Ảnh (`image/upload`), Video (`video/upload`), và PDF/Tài liệu (`raw/upload`).
+        </p>
+      </div>
+
+      <!-- Config Telegram -->
+      <div id="config-telegram" class="config-box">
+        <h4><i data-lucide="settings" style="width: 14px; height: 14px;"></i> Cấu hình Telegram Cloud API:</h4>
+        <div class="form-group">
+          <label>Bot Token (tạo từ @BotFather):</label>
+          <input type="text" id="tg_token" placeholder="vd: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ" onchange="saveConfig()">
+        </div>
+        <div class="form-group">
+          <label>Chat ID / Channel ID (kênh nhận file):</label>
+          <input type="text" id="tg_chatid" placeholder="vd: -100123456789 hoặc @ten_kenh" onchange="saveConfig()">
+        </div>
+      </div>
+
+      <!-- Config Catbox -->
+      <div id="config-catbox" class="config-box">
+        <h4><i data-lucide="settings" style="width: 14px; height: 14px;"></i> Tùy chọn Catbox / Litterbox:</h4>
+        <div class="form-group">
+          <label>Thời hạn lưu trữ:</label>
+          <select id="litter_time" style="width: 100%; padding: 10px; background: #1e293b; color: white; border: 1px solid #334155; border-radius: 8px;">
+            <option value="72h" selected>72 Giờ (3 Ngày)</option>
+            <option value="24h">24 Giờ (1 Ngày)</option>
+            <option value="1h">1 Giờ</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Config DoodStream -->
+      <div id="config-doodstream" class="config-box">
+        <h4><i data-lucide="settings" style="width: 14px; height: 14px;"></i> Cấu hình DoodStream:</h4>
+        <div class="form-group">
+          <label>DoodStream API Key:</label>
+          <input type="text" id="dood_key" placeholder="vd: 123456abcdefg..." onchange="saveConfig()">
+        </div>
+      </div>
+
+      <!-- Config Supabase -->
+      <div id="config-supabase" class="config-box">
+        <h4><i data-lucide="settings" style="width: 14px; height: 14px;"></i> Cấu hình Supabase Storage:</h4>
+        <div class="form-group">
+          <label>Project URL:</label>
+          <input type="url" id="sb_url" placeholder="https://your-project.supabase.co" onchange="saveConfig()">
+        </div>
+        <div class="form-group">
+          <label>Anon Key:</label>
+          <input type="password" id="sb_key" placeholder="eyJhbGciOi..." onchange="saveConfig()">
+        </div>
+      </div>
+
+      <!-- Config GoFile -->
+      <div id="config-gofile" class="config-box">
+        <p style="font-size: 13px; color: #38bdf8;">
+          ✨ <strong>GoFile Cloud:</strong> Tự động 100%, hỗ trợ mọi loại tệp Ảnh, Video, PDF, ZIP dung lượng lớn.
+        </p>
+      </div>
+
+      <!-- Dropzone -->
+      <div class="section-title" style="margin-top: 18px;">
+        <i data-lucide="upload" style="width: 18px; height: 18px; color: #38bdf8;"></i>
+        <span>2. Chọn Tệp (Video, Ảnh, PDF, Tài Liệu,...):</span>
+      </div>
+
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+        <div class="icon-wrap">
+          <i id="dropzoneIcon" data-lucide="folder-up" style="width: 28px; height: 28px;"></i>
+        </div>
+        <p><strong>Nhấp vào đây để chọn Video, Ảnh hoặc PDF / Tệp</strong> hoặc kéo thả file vào</p>
+        <p style="font-size: 12px; margin-top: 6px; color: #64748b;">Hỗ trợ: MP4, MKV, JPG, PNG, WEBP, GIF, PDF, DOCX, ZIP, MP3,...</p>
+        <input type="file" id="fileInput" accept="*/*" onchange="handleFileSelected(this.files)">
+      </div>
+
+      <!-- File Preview -->
+      <div id="filePreviewCard" class="file-preview-card">
+        <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+          <i id="fileIcon" data-lucide="file" style="width: 20px; height: 20px; color: #34d399; flex-shrink: 0;"></i>
+          <span id="fileName" class="file-name"></span>
+          <span id="fileTypeBadge" class="type-badge"></span>
+        </div>
+        <span id="fileSize" class="file-size"></span>
+      </div>
+
+      <!-- Submit Button -->
+      <button id="btnUpload" class="btn-submit" onclick="executeUpload()">
+        <i data-lucide="upload-cloud" style="width: 20px; height: 20px;"></i>
+        <span id="btnText">Tải Lên Cloud & Tự Động Lưu Vào Google Sheet DATA</span>
+      </button>
+
+      <!-- Progress -->
+      <div id="progressContainer" class="progress-container">
+        <div class="progress-header">
+          <span id="progressStatus" style="color: #cbd5e1;">Đang chuẩn bị gửi qua API...</span>
+          <span id="progressPercent" style="color: #38bdf8;">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div id="progressBar" class="progress-bar-fill"></div>
+        </div>
+      </div>
+
+      <!-- Result Card -->
+      <div id="resultCard" class="result-card">
+        <div class="result-badge">
+          <i data-lucide="check-circle" style="width: 20px; height: 20px;"></i>
+          <span id="resultPlatformTitle">ĐÃ TẢI LÊN API THÀNH CÔNG!</span>
+        </div>
+
+        <div id="sheetSyncResult" class="sheet-sync-badge">
+          <i data-lucide="sheet" style="width: 16px; height: 16px;"></i>
+          <span id="sheetSyncText">Đang lưu vào Google Sheet DATA...</span>
+        </div>
+
+        <label style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 6px;">🔗 Đường link tệp trả về:</label>
+        <div class="link-row">
+          <input type="text" id="finalVideoUrl" readonly>
+          <button class="btn-action btn-copy" onclick="copyLink()">
+            <i data-lucide="copy" style="width: 14px; height: 14px;"></i> Copy
+          </button>
+          <a id="openLinkBtn" href="#" target="_blank" class="btn-action btn-visit">
+            <i data-lucide="external-link" style="width: 14px; height: 14px;"></i> Mở Tệp
+          </a>
+          <a href="https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/edit?gid=0#gid=0" target="_blank" class="btn-action btn-sheet">
+            <i data-lucide="table" style="width: 14px; height: 14px;"></i> Xem Sheet DATA
+          </a>
+        </div>
+
+        <!-- Dynamic Media Preview -->
+        <div id="mediaPreviewWrap" class="media-preview-wrap" style="display: none; padding: 12px;">
+          <!-- Video -->
+          <video id="previewPlayer" controls style="display: none;"></video>
+          <!-- Image -->
+          <img id="previewImage" src="" alt="Ảnh preview" style="display: none;">
+          <!-- Document / PDF -->
+          <div id="previewDoc" style="display: none; padding: 20px; color: #38bdf8;">
+            <i data-lucide="file-check-2" style="width: 48px; height: 48px; margin-bottom: 8px;"></i>
+            <p id="previewDocName" style="font-weight: 600;"></p>
+            <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Tài liệu đã được lưu trữ an toàn trên đám mây!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Dữ liệu tự động phân loại định dạng và lưu vào Google Sheet DATA (id, ngay, ngay_gio, dinh_dang, link, tên, ghi chú).
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Đã sao chép đường link!</div>
+
+  <script>
+    lucide.createIcons();
+
+    let selectedPlatform = 'cloudinary';
+    let selectedFile = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSavedConfig();
+    });
+
+    function selectPlatform(platform) {
+      selectedPlatform = platform;
+      document.querySelectorAll('.platform-card').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.config-box').forEach(b => b.classList.remove('open'));
+
+      document.getElementById(`card-${platform}`)?.classList.add('active');
+      document.getElementById(`config-${platform}`)?.classList.add('open');
+      document.getElementById('resultCard').style.display = 'none';
+      lucide.createIcons();
+    }
+
+    function saveConfig() {
+      const config = {
+        sheet_webapp_url: document.getElementById('sheet_webapp_url').value,
+        cld_name: document.getElementById('cld_name').value,
+        cld_preset: document.getElementById('cld_preset').value,
+        tg_token: document.getElementById('tg_token').value,
+        tg_chatid: document.getElementById('tg_chatid').value,
+        dood_key: document.getElementById('dood_key').value,
+        sb_url: document.getElementById('sb_url').value,
+        sb_key: document.getElementById('sb_key').value,
+      };
+      localStorage.setItem('media_hub_config', JSON.stringify(config));
+    }
+
+    function loadSavedConfig() {
+      const saved = localStorage.getItem('media_hub_config');
+      if (saved) {
+        try {
+          const config = JSON.parse(saved);
+          if (config.sheet_webapp_url) document.getElementById('sheet_webapp_url').value = config.sheet_webapp_url;
+          if (config.cld_name) document.getElementById('cld_name').value = config.cld_name;
+          if (config.cld_preset) document.getElementById('cld_preset').value = config.cld_preset;
+          if (config.tg_token) document.getElementById('tg_token').value = config.tg_token;
+          if (config.tg_chatid) document.getElementById('tg_chatid').value = config.tg_chatid;
+          if (config.dood_key) document.getElementById('dood_key').value = config.dood_key;
+          if (config.sb_url) document.getElementById('sb_url').value = config.sb_url;
+          if (config.sb_key) document.getElementById('sb_key').value = config.sb_key;
+        } catch(e) {}
+      }
+    }
+
+    // Drag & Drop
+    const dropzone = document.getElementById('dropzone');
+    ['dragenter', 'dragover'].forEach(name => {
+      dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(name => {
+      dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); });
+    });
+    dropzone.addEventListener('drop', (e) => {
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleFileSelected(e.dataTransfer.files);
+      }
+    });
+
+    function handleFileSelected(files) {
+      if (!files || files.length === 0) return;
+      selectedFile = files[0];
+
+      const ext = selectedFile.name.split('.').pop()?.toUpperCase() || 'FILE';
+      document.getElementById('fileName').innerText = selectedFile.name;
+      document.getElementById('fileSize').innerText = formatSize(selectedFile.size);
+      document.getElementById('fileTypeBadge').innerText = ext;
+
+      // Icon tương ứng theo loại file
+      const iconElem = document.getElementById('fileIcon');
+      if (selectedFile.type.startsWith('image/')) {
+        iconElem.setAttribute('data-lucide', 'image');
+      } else if (selectedFile.type.startsWith('video/')) {
+        iconElem.setAttribute('data-lucide', 'film');
+      } else if (selectedFile.name.endsWith('.pdf')) {
+        iconElem.setAttribute('data-lucide', 'file-text');
+      } else {
+        iconElem.setAttribute('data-lucide', 'file');
+      }
+
+      document.getElementById('filePreviewCard').style.display = 'flex';
+      document.getElementById('resultCard').style.display = 'none';
+      lucide.createIcons();
+    }
+
+    function formatSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Upload & Sync to Google Sheets
+    async function executeUpload() {
+      if (!selectedFile) {
+        showToast("⚠️ Vui lòng chọn một tệp (Video, Ảnh hoặc PDF) trước!");
+        return;
+      }
+
+      setLoading(true, "Đang kết nối tới API Cloud...");
+
+      try {
+        let fileUrl = "";
+        let platformName = "";
+
+        switch (selectedPlatform) {
+          case 'cloudinary':
+            fileUrl = await uploadCloudinary();
+            platformName = "Cloudinary (Vĩnh Viễn)";
+            break;
+          case 'telegram':
+            fileUrl = await uploadTelegram();
+            platformName = "Telegram Cloud API (Vĩnh Viễn)";
+            break;
+          case 'catbox':
+            fileUrl = await uploadLitterbox();
+            platformName = "Catbox / Litterbox";
+            break;
+          case 'doodstream':
+            fileUrl = await uploadDoodstream();
+            platformName = "DoodStream (Vĩnh Viễn)";
+            break;
+          case 'supabase':
+            fileUrl = await uploadSupabase();
+            platformName = "Supabase Storage (Vĩnh Viễn)";
+            break;
+          case 'gofile':
+            fileUrl = await uploadGoFile();
+            platformName = "GoFile Cloud (10-30 Ngày)";
+            break;
+        }
+
+        if (fileUrl) {
+          setLoading(false);
+          showResult(fileUrl, platformName);
+
+          // TỰ ĐỘNG LƯU VÀO GOOGLE SHEET DATA (7 CỘT)
+          await saveToGoogleSheet(fileUrl, platformName);
+        }
+      } catch (err) {
+        setLoading(false);
+        alert("Lỗi khi tải lên API: " + err.message);
+      }
+    }
+
+    // KIỂM TRA KẾT NỐI GOOGLE SHEET
+    async function testGoogleSheetSync() {
+      showToast("⏳ Đang kiểm tra kết nối Google Sheet...");
+      try {
+        const res = await fetch('http://localhost:5000/api/save-to-sheet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: Date.now().toString(),
+            dinh_dang: 'TEST',
+            link: 'https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/edit?gid=0#gid=0',
+            ten: 'test_connection.pdf',
+            ghi_chu: 'Kiểm tra kết nối Service Account thành công!'
+          })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          showToast("🎉 KẾT NỐI THÀNH CÔNG! Đã ghi vào Sheet DATA!");
+          alert("🎉 KẾT NỐI GOOGLE SHEET THÀNH CÔNG!\n\nĐã ghi 1 dòng test vào sheet DATA của Google Sheet 'luu_anh_video_api'.\nBạn có thể bấm 'Mở Sheet DATA' để kiểm tra!");
+        } else {
+          alert("Lỗi khi ghi vào Sheet: " + (data.message || 'Chưa rõ lỗi'));
+        }
+      } catch (err) {
+        alert("⚠️ Không thể kết nối tới máy chủ cổng 5000.\nHãy đảm bảo bạn đã mở file 'Chay_Server_Vinh_Vien.bat' để chạy máy chủ tự động kết nối Service Account!");
+      }
+    }
+
+    // GHI DỮ LIỆU VÀO GOOGLE SHEET (Cột: id, ngay, ngay_gio, dinh_dang, link, tên, ghi chú)
+    async function saveToGoogleSheet(fileUrl, platformName) {
+      const webappUrl = document.getElementById('sheet_webapp_url')?.value?.trim();
+      const syncStatus = document.getElementById('sheetSyncText');
+
+      const now = new Date();
+      const d = String(now.getDate()).padStart(2, '0');
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const y = now.getFullYear();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+
+      const ext = (selectedFile?.name || 'file').split('.').pop()?.toUpperCase() || 'FILE';
+      
+      let typeLabel = "Tệp tin";
+      if (selectedFile?.type?.startsWith('image/')) typeLabel = "Ảnh";
+      else if (selectedFile?.type?.startsWith('video/')) typeLabel = "Video";
+      else if (ext === 'PDF') typeLabel = "PDF";
+
+      const payload = {
+        sheet_name: "DATA",
+        id: Date.now().toString(),
+        ngay: `${d}/${m}/${y}`,
+        ngay_gio: `${d}/${m}/${y} ${hh}:${mm}:${ss}`,
+        dinh_dang: ext,
+        link: fileUrl,
+        ten: selectedFile?.name || 'file_' + Date.now(),
+        ghi_chu: `Lưu trữ ${typeLabel} qua ${platformName}`
+      };
+
+      if (syncStatus) syncStatus.innerHTML = `⏳ Đang lưu thông tin (${ext}) vào Google Sheet DATA...`;
+
+      // 1. Thử gửi qua Server Service Account cục bộ (Port 5000)
+      try {
+        const serverRes = await fetch('http://localhost:5000/api/save-to-sheet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const serverJson = await serverRes.json();
+        if (serverJson.status === 'success') {
+          if (syncStatus) syncStatus.innerHTML = `✅ <strong>Đã lưu tự động vào Google Sheet DATA!</strong> (${ext} - ID: ${payload.id})`;
+          showToast(`✅ Đã ghi ${ext} vào Google Sheet DATA!`);
+          return;
+        }
+      } catch (serverErr) {
+        console.warn("Local server offline, fallback to Web App URL if available...", serverErr);
+      }
+
+      // 2. Fallback sang Google Apps Script Web App nếu có URL
+      if (webappUrl) {
+        try {
+          await fetch(webappUrl, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          if (syncStatus) syncStatus.innerHTML = `✅ <strong>Đã lưu vào Google Sheet DATA qua Web App!</strong> (ID: ${payload.id})`;
+          showToast(`✅ Đã ghi ${ext} vào Google Sheet DATA!`);
+          return;
+        } catch (err) {
+          if (syncStatus) syncStatus.innerHTML = `❌ Lỗi lưu Google Sheet: ${err.message}`;
+        }
+      } else {
+        if (syncStatus) syncStatus.innerHTML = `ℹ️ Đã nhận link tệp. (Hãy mở <code>Chay_Server_Vinh_Vien.bat</code> để tự động đồng bộ Google Sheet).`;
+      }
+    }
+
+    // 1. CLOUDINARY UPLOAD (HỖ TRỢ AUTO: ẢNH, VIDEO, PDF, RAW)
+    function uploadCloudinary() {
+      return new Promise((resolve, reject) => {
+        const cloudName = document.getElementById('cld_name').value.trim() || 'qeld2qwe';
+        const preset = document.getElementById('cld_preset').value.trim();
+
+        if (!cloudName || !preset) {
+          setLoading(false);
+          alert("Vui lòng nhập Upload Preset trong mục cấu hình Cloudinary!");
+          return;
+        }
+
+        // Endpoint auto hỗ trợ MỌI loại file (Image, Video, Raw, PDF, Audio)
+        const url = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("upload_preset", preset);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", url, true);
+        bindProgress(xhr, "Đang tải lên Cloudinary");
+
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            const data = JSON.parse(xhr.responseText);
+            resolve(data.secure_url || data.url);
+          } else {
+            reject(new Error("Lỗi Cloudinary: " + xhr.responseText));
+          }
+        };
+        xhr.onerror = () => reject(new Error("Lỗi kết nối tới Cloudinary!"));
+        xhr.send(formData);
+      });
+    }
+
+    // 2. TELEGRAM BOT UPLOAD (HỖ TRỢ ẢNH, VIDEO, PDF & TÀI LIỆU)
+    function uploadTelegram() {
+      return new Promise((resolve, reject) => {
+        const token = document.getElementById('tg_token').value.trim();
+        const chatId = document.getElementById('tg_chatid').value.trim();
+
+        if (!token || !chatId) {
+          setLoading(false);
+          alert("Vui lòng nhập Bot Token và Chat ID trong mục cấu hình Telegram!");
+          return;
+        }
+
+        let endpoint = "sendDocument";
+        let fieldName = "document";
+
+        if (selectedFile.type.startsWith('video/')) {
+          endpoint = "sendVideo";
+          fieldName = "video";
+        } else if (selectedFile.type.startsWith('image/') && !selectedFile.name.endsWith('.gif')) {
+          endpoint = "sendPhoto";
+          fieldName = "photo";
+        }
+
+        const url = `https://api.telegram.org/bot${token}/${endpoint}`;
+        const formData = new FormData();
+        formData.append("chat_id", chatId);
+        formData.append(fieldName, selectedFile);
+        formData.append("caption", `Tải lên từ Media Cloud Hub (${selectedFile.name})`);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", url, true);
+        bindProgress(xhr, "Đang gửi lên Telegram Cloud");
+
+        xhr.onload = async () => {
+          if (xhr.status === 200) {
+            const res = JSON.parse(xhr.responseText);
+            if (res.ok && res.result) {
+              let fileId = null;
+              if (res.result.video) fileId = res.result.video.file_id;
+              else if (res.result.photo && res.result.photo.length > 0) fileId = res.result.photo[res.result.photo.length - 1].file_id;
+              else if (res.result.document) fileId = res.result.document.file_id;
+
+              if (fileId) {
+                try {
+                  const fileInfoRes = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`);
+                  const fileInfo = await fileInfoRes.json();
+                  if (fileInfo.ok) {
+                    const directUrl = `https://api.telegram.org/file/bot${token}/${fileInfo.result.file_path}`;
+                    resolve(directUrl);
+                    return;
+                  }
+                } catch(e) {}
+              }
+              resolve(`https://t.me/${chatId.replace('@','')}/${res.result.message_id}`);
+            } else {
+              reject(new Error("Telegram phản hồi không hợp lệ: " + xhr.responseText));
+            }
+          } else {
+            reject(new Error("Lỗi Telegram: " + xhr.responseText));
+          }
+        };
+        xhr.onerror = () => reject(new Error("Lỗi kết nối tới Telegram API!"));
+        xhr.send(formData);
+      });
+    }
+
+    // 3. CATBOX / LITTERBOX UPLOAD (HỖ TRỢ MỌI LOẠI TỆP)
+    function uploadLitterbox() {
+      return new Promise((resolve, reject) => {
+        const time = document.getElementById('litter_time').value;
+        const url = "https://litterbox.catbox.moe/resources/internals/api.php";
+        const formData = new FormData();
+        formData.append("reqtype", "fileupload");
+        formData.append("time", time);
+        formData.append("fileToUpload", selectedFile);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", url, true);
+        bindProgress(xhr, "Đang tải lên Litterbox");
+
+        xhr.onload = () => {
+          if (xhr.status === 200 && xhr.responseText.startsWith("http")) {
+            resolve(xhr.responseText.trim());
+          } else {
+            reject(new Error("Lỗi tải lên Catbox: " + xhr.responseText));
+          }
+        };
+        xhr.onerror = () => reject(new Error("Lỗi kết nối tới Catbox API!"));
+        xhr.send(formData);
+      });
+    }
+
+    // 4. DOODSTREAM UPLOAD (CHUYÊN VIDEO)
+    async function uploadDoodstream() {
+      const apiKey = document.getElementById('dood_key').value.trim();
+      if (!apiKey) {
+        setLoading(false);
+        alert("Vui lòng nhập DoodStream API Key!");
+        return;
+      }
+
+      const serverRes = await fetch(`https://doodapi.com/api/upload/server?key=${apiKey}`);
+      const serverData = await serverRes.json();
+      if (serverData.status !== 200 || !serverData.result) {
+        throw new Error("Không thể lấy server DoodStream: " + serverData.msg);
+      }
+
+      const uploadUrl = serverData.result;
+      const formData = new FormData();
+      formData.append("api_key", apiKey);
+      formData.append("file", selectedFile);
+
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", uploadUrl, true);
+        bindProgress(xhr, "Đang tải lên DoodStream");
+
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            const data = JSON.parse(xhr.responseText);
+            if (data.result && data.result.length > 0) {
+              const video = data.result[0];
+              resolve(video.download_url || video.protected_embed);
+            } else {
+              reject(new Error("Lỗi Doodstream: " + xhr.responseText));
+            }
+          } else {
+            reject(new Error("Lỗi server Doodstream: " + xhr.statusText));
+          }
+        };
+        xhr.onerror = () => reject(new Error("Lỗi kết nối tới DoodStream!"));
+        xhr.send(formData);
+      });
+    }
+
+    // 5. SUPABASE STORAGE UPLOAD (HỖ TRỢ MỌI LOẠI TỆP)
+    function uploadSupabase() {
+      return new Promise((resolve, reject) => {
+        let sbUrl = document.getElementById('sb_url').value.trim().replace(/\/$/, '');
+        const sbKey = document.getElementById('sb_key').value.trim();
+        const bucket = 'videos';
+
+        if (!sbUrl || !sbKey) {
+          setLoading(false);
+          alert("Vui lòng nhập Project URL và Anon Key của Supabase!");
+          return;
+        }
+
+        const fileName = `${Date.now()}_${selectedFile.name.replace(/\s+/g, '_')}`;
+        const uploadUrl = `${sbUrl}/storage/v1/object/${bucket}/${fileName}`;
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", uploadUrl, true);
+        xhr.setRequestHeader("apikey", sbKey);
+        xhr.setRequestHeader("Authorization", "Bearer " + sbKey);
+        xhr.setRequestHeader("Content-Type", selectedFile.type || "application/octet-stream");
+        bindProgress(xhr, "Đang tải lên Supabase Storage");
+
+        xhr.onload = () => {
+          if (xhr.status === 200 || xhr.status === 201) {
+            const publicUrl = `${sbUrl}/storage/v1/object/public/${bucket}/${fileName}`;
+            resolve(publicUrl);
+          } else {
+            reject(new Error("Lỗi Supabase: " + xhr.responseText));
+          }
+        };
+        xhr.onerror = () => reject(new Error("Lỗi kết nối tới Supabase!"));
+        xhr.send(selectedFile);
+      });
+    }
+
+    // 6. GOFILE UPLOAD (HỖ TRỢ MỌI LOẠI TỆP)
+    async function uploadGoFile() {
+      const serverRes = await fetch('https://api.gofile.io/servers');
+      const serverData = await serverRes.json();
+      let serverName = 'store1';
+      if (serverData.status === 'ok' && serverData.data?.servers?.length > 0) {
+        serverName = serverData.data.servers[0].name;
+      }
+
+      const uploadUrl = `https://${serverName}.gofile.io/contents/uploadfile`;
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", uploadUrl, true);
+        bindProgress(xhr, "Đang tải lên GoFile Cloud");
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const res = JSON.parse(xhr.responseText);
+            if (res.status === 'ok' && res.data?.downloadPage) {
+              resolve(res.data.downloadPage);
+            } else {
+              reject(new Error("Không tìm thấy link: " + xhr.responseText));
+            }
+          } else {
+            reject(new Error("Lỗi GoFile API: " + xhr.statusText));
+          }
+        };
+        xhr.onerror = () => reject(new Error("Lỗi kết nối tới GoFile!"));
+        xhr.send(formData);
+      });
+    }
+
+    // Tiện ích
+    function bindProgress(xhr, label) {
+      const progressBar = document.getElementById('progressBar');
+      const progressStatus = document.getElementById('progressStatus');
+      const progressPercent = document.getElementById('progressPercent');
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          progressBar.style.width = percent + "%";
+          progressPercent.innerText = percent + "%";
+          progressStatus.innerText = percent < 100 ? `${label}: ${percent}%` : "API đang xử lý và tạo link...";
+        }
+      };
+    }
+
+    function setLoading(isLoading, text) {
+      document.getElementById('btnUpload').disabled = isLoading;
+      const progressBox = document.getElementById('progressContainer');
+      progressBox.style.display = isLoading ? 'block' : 'none';
+      if (isLoading) {
+        document.getElementById('progressStatus').innerText = text || 'Đang xử lý...';
+        document.getElementById('progressBar').style.width = '5%';
+        document.getElementById('progressPercent').innerText = '0%';
+      }
+    }
+
+    function showResult(url, platformName) {
+      const resultCard = document.getElementById('resultCard');
+      const finalInput = document.getElementById('finalVideoUrl');
+      const openBtn = document.getElementById('openLinkBtn');
+      const mediaWrap = document.getElementById('mediaPreviewWrap');
+      const player = document.getElementById('previewPlayer');
+      const img = document.getElementById('previewImage');
+      const doc = document.getElementById('previewDoc');
+      const docName = document.getElementById('previewDocName');
+      const title = document.getElementById('resultPlatformTitle');
+
+      finalInput.value = url;
+      openBtn.href = url;
+      title.innerText = `ĐÃ TẢI LÊN ${platformName.toUpperCase()} THÀNH CÔNG!`;
+
+      // Reset previews
+      player.style.display = 'none';
+      player.src = '';
+      img.style.display = 'none';
+      img.src = '';
+      doc.style.display = 'none';
+      mediaWrap.style.display = 'block';
+
+      const lowerUrl = url.toLowerCase();
+      const isImg = lowerUrl.match(/\.(jpg|jpeg|png|webp|gif|svg|avif)($|\?)/) || (selectedFile && selectedFile.type.startsWith('image/'));
+      const isVid = lowerUrl.match(/\.(mp4|webm|mkv|mov|avi)($|\?)/) || (selectedFile && selectedFile.type.startsWith('video/'));
+      const isPdf = lowerUrl.endsWith('.pdf') || (selectedFile && selectedFile.name.endsWith('.pdf'));
+
+      if (isImg && !isVid) {
+        img.src = url;
+        img.style.display = 'inline-block';
+      } else if (isVid) {
+        player.src = url;
+        player.style.display = 'block';
+      } else {
+        docName.innerText = selectedFile ? selectedFile.name : (isPdf ? 'Tài liệu PDF' : 'Tệp tin');
+        doc.style.display = 'block';
+      }
+
+      resultCard.style.display = 'block';
+      lucide.createIcons();
+      resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      showToast("🎉 Lấy đường link thành công!");
+    }
+
+    function copyLink() {
+      const input = document.getElementById('finalVideoUrl');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => {
+        showToast("Đã sao chép đường link vào bộ nhớ!");
+      });
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      toast.innerText = text;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+  </script>
+</body>
+</html>
