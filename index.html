@@ -1169,7 +1169,7 @@
       });
     }
 
-    // 2. CATBOX.MOE UPLOAD (LƯU VĨNH VIỄN / AUTO FALLBACK)
+    // 2. CATBOX.MOE UPLOAD (LƯU VĨNH VIỄN)
     function uploadCatbox() {
       return new Promise((resolve, reject) => {
         const userhash = document.getElementById('catbox_userhash')?.value?.trim() || '';
@@ -1178,34 +1178,48 @@
         if (userhash) formData.append("userhash", userhash);
         formData.append("fileToUpload", selectedFile);
 
-        let targetUrl = "https://catbox.moe/user/api.php";
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-          targetUrl = "http://localhost:5000/api/catbox-upload";
-        }
+        // Thử qua Local Server (Port 5000) trước
+        const localXhr = new XMLHttpRequest();
+        localXhr.open("POST", "http://localhost:5000/api/catbox-upload", true);
+        bindProgress(localXhr, "Đang tải lên Catbox.moe qua Server");
 
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", targetUrl, true);
-        bindProgress(xhr, "Đang tải lên Catbox");
-
-        xhr.onload = () => {
-          if (xhr.status === 200 && xhr.responseText.startsWith("http")) {
-            resolve(xhr.responseText.trim());
+        localXhr.onload = () => {
+          if (localXhr.status === 200 && localXhr.responseText.trim().startsWith("http")) {
+            resolve(localXhr.responseText.trim());
           } else {
-            // Tự động chuyển tiếp sang Litterbox API nếu lỗi
-            uploadLitterbox().then(resolve).catch(reject);
+            tryDirectCatbox();
           }
         };
-        xhr.onerror = () => {
-          // Khi trình duyệt chặn CORS trên GitHub Pages, tự động chuyển sang Litterbox API để tải thành công ngay
-          uploadLitterbox().then(resolve).catch(reject);
+
+        localXhr.onerror = () => {
+          tryDirectCatbox();
         };
-        xhr.send(formData);
+
+        function tryDirectCatbox() {
+          const directXhr = new XMLHttpRequest();
+          directXhr.open("POST", "https://catbox.moe/user/api.php", true);
+          bindProgress(directXhr, "Đang tải trực tiếp lên Catbox");
+
+          directXhr.onload = () => {
+            if (directXhr.status === 200 && directXhr.responseText.trim().startsWith("http")) {
+              resolve(directXhr.responseText.trim());
+            } else {
+              reject(new Error("Lỗi phản hồi từ Catbox: " + directXhr.responseText));
+            }
+          };
+
+          directXhr.onerror = () => {
+            reject(new Error("Không thể kết nối trực tiếp Catbox từ trình duyệt (do chính sách CORS của Catbox).\n\n👉 HƯỚNG DẪN XỬ LÝ NHANH:\n1. Mở file 'Chay_Server_Vinh_Vien.bat' trên máy tính để chạy Server hỗ trợ Catbox 100% không lo lỗi CORS.\n2. HOẶC chọn nền tảng 'GoFile Cloud' hoặc 'Cloudinary' (hoạt động trực tiếp 100% trên web)!"));
+          };
+
+          directXhr.send(formData);
+        }
+
+        localXhr.send(formData);
       });
     }
 
-
-
-    // 3. LITTERBOX UPLOAD (LƯU TẠM THỜI 1H / 24H / 72H - TỐI ĐA 1GB)
+    // 3. LITTERBOX UPLOAD (LƯU TẠM THỜI 1H / 24H / 72H - TỰ ĐỘNG FALLBACK)
     function uploadLitterbox() {
       return new Promise((resolve, reject) => {
         if (selectedFile.size > 1024 * 1024 * 1024) {
@@ -1215,25 +1229,49 @@
         }
 
         const time = document.getElementById('litter_time')?.value || '72h';
-        const url = "https://litterbox.catbox.moe/resources/internals/api.php";
         const formData = new FormData();
         formData.append("reqtype", "fileupload");
         formData.append("time", time);
         formData.append("fileToUpload", selectedFile);
 
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", url, true);
-        bindProgress(xhr, `Đang tải lên Litterbox (${time})`);
+        // Thử qua Local Server (Port 5000) trước
+        const localXhr = new XMLHttpRequest();
+        localXhr.open("POST", "http://localhost:5000/api/litterbox-upload", true);
+        bindProgress(localXhr, `Đang tải lên Litterbox (${time}) qua Server`);
 
-        xhr.onload = () => {
-          if (xhr.status === 200 && xhr.responseText.startsWith("http")) {
-            resolve(xhr.responseText.trim());
+        localXhr.onload = () => {
+          if (localXhr.status === 200 && localXhr.responseText.trim().startsWith("http")) {
+            resolve(localXhr.responseText.trim());
           } else {
-            reject(new Error("Lỗi tải lên Litterbox: " + xhr.responseText));
+            tryDirectLitterbox();
           }
         };
-        xhr.onerror = () => reject(new Error("Lỗi kết nối tới Litterbox API!"));
-        xhr.send(formData);
+
+        localXhr.onerror = () => {
+          tryDirectLitterbox();
+        };
+
+        function tryDirectLitterbox() {
+          const directXhr = new XMLHttpRequest();
+          directXhr.open("POST", "https://litterbox.catbox.moe/resources/internals/api.php", true);
+          bindProgress(directXhr, `Đang tải trực tiếp lên Litterbox (${time})`);
+
+          directXhr.onload = () => {
+            if (directXhr.status === 200 && directXhr.responseText.trim().startsWith("http")) {
+              resolve(directXhr.responseText.trim());
+            } else {
+              reject(new Error("Lỗi phản hồi từ Litterbox: " + directXhr.responseText));
+            }
+          };
+
+          directXhr.onerror = () => {
+            reject(new Error("Không thể kết nối trực tiếp Litterbox từ trình duyệt (do chính sách CORS của Litterbox).\n\n👉 HƯỚNG DẪN XỬ LÝ NHANH:\n1. Mở file 'Chay_Server_Vinh_Vien.bat' trên máy tính để chạy Server hỗ trợ Litterbox/Catbox 100%.\n2. HOẶC chọn nền tảng 'GoFile Cloud' hoặc 'Cloudinary' (hoạt động trực tiếp 100% trên web)!"));
+          };
+
+          directXhr.send(formData);
+        }
+
+        localXhr.send(formData);
       });
     }
 

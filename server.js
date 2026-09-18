@@ -156,6 +156,7 @@ const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Private-Network', 'true');
 
   if (req.method === 'OPTIONS') {
     res.writeHead(200);
@@ -230,6 +231,7 @@ const server = http.createServer((req, res) => {
           const catbox = new Catbox(userhash || undefined);
           fileUrl = await catbox.uploadFile({ path: tempPath });
         } catch (catErr) {
+          console.warn('node-catbox error, fallback to raw api:', catErr.message);
           const form = new FormData();
           form.append('reqtype', 'fileupload');
           if (userhash) form.append('userhash', userhash);
@@ -250,6 +252,73 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API Upload Litterbox qua Server (100% không lỗi CORS)
+  if (req.method === 'POST' && req.url.startsWith('/api/litterbox-upload')) {
+    const contentType = req.headers['content-type'] || '';
+    const boundaryMatch = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
+    const boundary = boundaryMatch ? (boundaryMatch[1] || boundaryMatch[2]) : '';
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
+    req.on('end', async () => {
+      try {
+        const buffer = Buffer.concat(chunks);
+        let time = '72h';
+        let fileData = null;
+        let filename = 'file.dat';
+
+        if (boundary) {
+          const boundaryBuf = Buffer.from('--' + boundary);
+          let pos = 0;
+          while (pos < buffer.length) {
+            const next = buffer.indexOf(boundaryBuf, pos);
+            if (next === -1) break;
+            const headerEnd = buffer.indexOf(Buffer.from('\r\n\r\n'), next);
+            if (headerEnd !== -1) {
+              const head = buffer.slice(next, headerEnd).toString();
+              const partEnd = buffer.indexOf(boundaryBuf, headerEnd + 4);
+              if (partEnd !== -1) {
+                const partContent = buffer.slice(headerEnd + 4, partEnd - 2);
+                if (head.includes('name="time"')) {
+                  time = partContent.toString().trim() || '72h';
+                } else if (head.includes('name="fileToUpload"')) {
+                  fileData = partContent;
+                  const fnMatch = head.match(/filename="([^"]+)"/);
+                  if (fnMatch) filename = fnMatch[1];
+                }
+              }
+            }
+            pos = next + boundaryBuf.length;
+          }
+        }
+
+        if (!fileData) fileData = buffer;
+
+        const tempPath = path.join(UPLOAD_DIR, `temp_${Date.now()}_${filename}`);
+        fs.writeFileSync(tempPath, fileData);
+
+        let fileUrl = '';
+        try {
+          const { Litterbox } = require('node-catbox');
+          const litterbox = new Litterbox();
+          fileUrl = await litterbox.uploadFile({ path: tempPath, duration: time });
+        } catch (litterErr) {
+          console.warn('Litterbox API bị chặn bởi WAF, tự động fallback sang Catbox.moe:', litterErr.message);
+          const { Catbox } = require('node-catbox');
+          const catbox = new Catbox();
+          fileUrl = await catbox.uploadFile({ path: tempPath });
+        } finally {
+          if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+        }
+
+        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end(fileUrl);
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('Lỗi Litterbox: ' + err.message);
+      }
+    });
+    return;
+  }
 
   // API lưu thông tin vào Google Sheet từ Web Client
   if (req.method === 'POST' && req.url === '/api/save-to-sheet') {
