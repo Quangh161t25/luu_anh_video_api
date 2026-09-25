@@ -1180,6 +1180,21 @@
             </button>
           </div>
         </div>
+
+        <!-- Tùy chọn Tải Song Song Nhiều Tệp Cùng Lúc -->
+        <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(15, 23, 42, 0.6); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.2); margin: 0 12px 10px 12px; font-size: 12px; color: #94a3b8; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="zap" style="width: 15px; height: 15px; color: #38bdf8;"></i>
+            <span style="font-weight: 700; color: #f1f5f9;">Tốc độ tải đồng thời:</span>
+          </div>
+          <select id="upload_concurrency" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; border-radius: 6px; padding: 4px 8px; font-size: 12px; font-weight: 700; outline: none; cursor: pointer;">
+            <option value="3" selected>⚡ Tải song song 3 tệp cùng lúc (Khuyên Dùng)</option>
+            <option value="5">🚀 Tải song song 5 tệp cùng lúc (Siêu tốc cho nhiều Ảnh)</option>
+            <option value="8">🔥 Tải song song 8 tệp cùng lúc (Cực nhanh)</option>
+            <option value="1">🐢 Tải tuần tự từng tệp một (Mạng yếu)</option>
+          </select>
+        </div>
+
         <div id="queueList" class="queue-list"></div>
       </div>
 
@@ -1523,13 +1538,13 @@
 
         let statusHtml = '';
         if (item.status === 'waiting') {
-          statusHtml = `<span class="status-badge status-waiting"><i data-lucide="clock" style="width: 12px; height: 12px;"></i> Chờ tải</span>`;
+          statusHtml = `<span id="item-status-${item.id}" class="status-badge status-waiting"><i data-lucide="clock" style="width: 12px; height: 12px;"></i> Chờ tải</span>`;
         } else if (item.status === 'uploading') {
-          statusHtml = `<span class="status-badge status-uploading"><i data-lucide="loader-2" class="spin" style="width: 12px; height: 12px;"></i> ${item.progress}%</span>`;
+          statusHtml = `<span id="item-status-${item.id}" class="status-badge status-uploading"><i data-lucide="loader-2" class="spin" style="width: 12px; height: 12px;"></i> ${item.progress}%</span>`;
         } else if (item.status === 'success') {
-          statusHtml = `<span class="status-badge status-success"><i data-lucide="check" style="width: 12px; height: 12px;"></i> Thành công</span>`;
+          statusHtml = `<span id="item-status-${item.id}" class="status-badge status-success"><i data-lucide="check" style="width: 12px; height: 12px;"></i> Thành công</span>`;
         } else if (item.status === 'error') {
-          statusHtml = `<span class="status-badge status-error"><i data-lucide="alert-circle" style="width: 12px; height: 12px;"></i> Bị lỗi</span>`;
+          statusHtml = `<span id="item-status-${item.id}" class="status-badge status-error"><i data-lucide="alert-circle" style="width: 12px; height: 12px;"></i> Bị lỗi</span>`;
         }
 
         const itemElem = document.createElement('div');
@@ -1628,7 +1643,7 @@
     }
 
     // ==========================================
-    // BATCH EXECUTION: TẢI NHIỀU TỆP TUẦN TỰ
+    // BATCH EXECUTION: TẢI NHIỀU TỆP ĐỒNG THỜI (PARALLEL CONCURRENT UPLOAD)
     // ==========================================
     async function executeBatchUpload() {
       if (isUploading) return;
@@ -1663,74 +1678,133 @@
       }
 
       let successCount = 0;
+      let finishedCount = 0;
       const total = fileQueue.length;
 
-      for (let i = 0; i < total; i++) {
-        const item = fileQueue[i];
-        if (item.status === 'success' && item.url) {
-          successCount++;
-          continue;
-        }
+      // Đọc cấu hình tốc độ đồng thời (Concurrency)
+      const concurrencySetting = parseInt(document.getElementById('upload_concurrency')?.value || '3', 10);
+      const concurrency = Math.max(1, Math.min(concurrencySetting, total));
 
-        item.status = 'uploading';
-        item.progress = 0;
-        item.error = '';
-        item.hint = '';
-        renderQueue();
-
-        const overallPercent = Math.round(((i) / total) * 100);
-        progressStatus.innerText = `Đang tải tệp ${i + 1}/${total}: ${item.name}...`;
+      const updateMasterProgress = () => {
+        const overallPercent = Math.round((finishedCount / total) * 100);
         progressBar.style.width = overallPercent + '%';
         progressPercent.innerText = overallPercent + '%';
+        progressStatus.innerText = `⚡ Đang tải cùng lúc (${finishedCount}/${total} tệp hoàn thành) qua ${platformName}...`;
+      };
 
-        try {
-          const onProg = (pct) => {
-            item.progress = pct;
-            const fillElem = document.getElementById(`item-prog-fill-${item.id}`);
-            if (fillElem) fillElem.style.width = pct + '%';
-          };
+      updateMasterProgress();
 
-          let url = "";
-          switch (selectedPlatform) {
-            case 'cloudinary': url = await uploadCloudinary(item.file, onProg); break;
-            case 'catbox': url = await uploadCatbox(item.file, onProg); break;
-            case 'litterbox': url = await uploadLitterbox(item.file, onProg); break;
-            case 'telegram': url = await uploadTelegram(item.file, onProg); break;
-            case 'doodstream': url = await uploadDoodstream(item.file, onProg); break;
-            case 'supabase': url = await uploadSupabase(item.file, onProg); break;
-            case 'gofile': url = await uploadGoFile(item.file, onProg); break;
-            case 'tmpfiles': url = await uploadTmpFiles(item.file, onProg); break;
-          }
+      let queueIndex = 0;
+      async function uploadWorker() {
+        while (queueIndex < total) {
+          const currentIndex = queueIndex++;
+          const item = fileQueue[currentIndex];
+          if (!item) break;
 
-          if (url) {
-            item.url = url;
-            item.status = 'success';
-            item.progress = 100;
+          if (item.status === 'success' && item.url) {
             successCount++;
-
-            // Ghi ngay vào Google Sheet DATA
-            await saveToGoogleSheet(item.file, url, platformName, i + 1, total);
-          } else {
-            throw new Error("Không nhận được link phản hồi từ máy chủ!");
+            finishedCount++;
+            updateMasterProgress();
+            continue;
           }
-        } catch (err) {
-          console.error(`Lỗi tải tệp ${item.name}:`, err);
-          item.status = 'error';
-          item.error = err.message || 'Lỗi tải lên không xác định';
-          item.hint = err.hint || (selectedPlatform === 'catbox' || selectedPlatform === 'litterbox' ? 'Catbox/Litterbox chặn tải trực tiếp từ trình duyệt điện thoại (Lỗi CORS). Hãy chuyển sang tab Cloudinary hoặc Telegram để tải trực tiếp trên điện thoại!' : 'Kiểm tra lại kết nối mạng và cấu hình API.');
-          showToast(`❌ ${item.name}: ${item.error}`);
-        }
 
-        renderQueue();
+          item.status = 'uploading';
+          item.progress = 0;
+          item.error = '';
+          item.hint = '';
+
+          // Cập nhật DOM item sang trạng thái uploading
+          const itemElem = document.getElementById(`item-${item.id}`);
+          if (itemElem) {
+            itemElem.className = 'queue-item uploading';
+            const statusElem = document.getElementById(`item-status-${item.id}`);
+            if (statusElem) {
+              statusElem.className = 'status-badge status-uploading';
+              statusElem.innerHTML = `<i data-lucide="loader-2" class="spin" style="width: 12px; height: 12px;"></i> 0%`;
+              lucide.createIcons();
+            }
+            const progBar = document.getElementById(`item-prog-bar-${item.id}`);
+            if (progBar) progBar.style.display = 'block';
+            const fillElem = document.getElementById(`item-prog-fill-${item.id}`);
+            if (fillElem) fillElem.style.width = '0%';
+          }
+
+          try {
+            const onProg = (pct) => {
+              item.progress = pct;
+              const fillElem = document.getElementById(`item-prog-fill-${item.id}`);
+              if (fillElem) fillElem.style.width = pct + '%';
+              const statusElem = document.getElementById(`item-status-${item.id}`);
+              if (statusElem && statusElem.classList.contains('status-uploading')) {
+                statusElem.innerHTML = `<i data-lucide="loader-2" class="spin" style="width: 12px; height: 12px;"></i> ${pct}%`;
+              }
+            };
+
+            let url = "";
+            switch (selectedPlatform) {
+              case 'cloudinary': url = await uploadCloudinary(item.file, onProg); break;
+              case 'catbox': url = await uploadCatbox(item.file, onProg); break;
+              case 'litterbox': url = await uploadLitterbox(item.file, onProg); break;
+              case 'telegram': url = await uploadTelegram(item.file, onProg); break;
+              case 'doodstream': url = await uploadDoodstream(item.file, onProg); break;
+              case 'supabase': url = await uploadSupabase(item.file, onProg); break;
+              case 'gofile': url = await uploadGoFile(item.file, onProg); break;
+              case 'tmpfiles': url = await uploadTmpFiles(item.file, onProg); break;
+            }
+
+            if (url) {
+              item.url = url;
+              item.status = 'success';
+              item.progress = 100;
+              successCount++;
+
+              const itemElem = document.getElementById(`item-${item.id}`);
+              if (itemElem) {
+                itemElem.className = 'queue-item success';
+                const statusElem = document.getElementById(`item-status-${item.id}`);
+                if (statusElem) {
+                  statusElem.className = 'status-badge status-success';
+                  statusElem.innerHTML = `<i data-lucide="check" style="width: 12px; height: 12px;"></i> Thành công`;
+                  lucide.createIcons();
+                }
+                const progBar = document.getElementById(`item-prog-bar-${item.id}`);
+                if (progBar) progBar.style.display = 'none';
+              }
+
+              // Ghi ngay vào Google Sheet DATA
+              await saveToGoogleSheet(item.file, url, platformName, currentIndex + 1, total);
+            } else {
+              throw new Error("Không nhận được link phản hồi từ máy chủ!");
+            }
+          } catch (err) {
+            console.error(`Lỗi tải tệp ${item.name}:`, err);
+            item.status = 'error';
+            item.error = err.message || 'Lỗi tải lên không xác định';
+            item.hint = err.hint || (selectedPlatform === 'catbox' || selectedPlatform === 'litterbox' ? 'Catbox/Litterbox chặn tải trực tiếp từ trình duyệt điện thoại (Lỗi CORS). Hãy chuyển sang tab Cloudinary hoặc TmpFiles!' : 'Kiểm tra lại kết nối mạng và cấu hình API.');
+            showToast(`❌ ${item.name}: ${item.error}`);
+            renderQueue();
+          }
+
+          finishedCount++;
+          updateMasterProgress();
+        }
       }
+
+      // Khởi động các worker tải song song
+      const workers = [];
+      for (let w = 0; w < concurrency; w++) {
+        workers.push(uploadWorker());
+      }
+      await Promise.all(workers);
 
       // Hoàn tất toàn bộ
       progressBar.style.width = '100%';
       progressPercent.innerText = '100%';
-      progressStatus.innerText = `🎉 Đã hoàn tất xử lý ${total} tệp! (${successCount} thành công)`;
+      progressStatus.innerText = `🎉 Đã hoàn tất xử lý đồng thời ${total} tệp! (${successCount} thành công)`;
 
       isUploading = false;
       document.getElementById('btnUpload').disabled = false;
+      renderQueue();
 
       // Hiển thị kết quả tổng hợp
       showBatchResults(platformName, successCount, total);
