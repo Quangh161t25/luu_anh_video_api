@@ -6,13 +6,19 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.statusCode = 200;
+    res.end();
+    return;
   }
+
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
   try {
     const rows = await getGoogleSheetRows();
-    res.status(200).json({ status: 'success', data: rows });
+    res.statusCode = 200;
+    res.end(JSON.stringify({ status: 'success', data: rows }));
   } catch (err) {
-    res.status(500).json({ status: 'error', message: err.message });
+    res.statusCode = 500;
+    res.end(JSON.stringify({ status: 'error', message: err.message }));
   }
 };

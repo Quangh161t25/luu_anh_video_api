@@ -4,11 +4,15 @@ module.exports = (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.statusCode = 200;
+    res.end();
+    return;
   }
 
-  res.status(200).json({
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.statusCode = 200;
+  res.end(JSON.stringify({
     status: 'ok',
     message: 'Media Cloud Hub API is running smoothly on Vercel!'
-  });
+  }));
 };
