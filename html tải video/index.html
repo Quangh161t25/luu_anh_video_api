@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video API Hub - Upload & Get Link</title>
+  <!-- Google Fonts & Lucide Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --success: #10b981;
+      --success-hover: #059669;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --input-bg: #0f172a;
+      --input-border: #475569;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 580px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: var(--input-bg);
+      padding: 4px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      border: 1px solid var(--card-border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Form controls */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+
+    .api-config-toggle {
+      font-size: 12px;
+      color: #818cf8;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 12px;
+      user-select: none;
+    }
+
+    .api-config-box {
+      display: none;
+      background: var(--input-bg);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--input-border);
+      margin-bottom: 16px;
+    }
+
+    .api-config-box.open {
+      display: block;
+    }
+
+    input[type="text"], input[type="url"] {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus, input[type="url"]:focus {
+      border-color: var(--primary);
+    }
+
+    /* Dropzone */
+    .dropzone {
+      border: 2px dashed var(--input-border);
+      border-radius: 12px;
+      padding: 30px 20px;
+      text-align: center;
+      background: rgba(15, 23, 42, 0.6);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--primary);
+      background: rgba(79, 70, 229, 0.08);
+    }
+
+    .dropzone i {
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    .dropzone p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .dropzone p strong {
+      color: var(--text-main);
+    }
+
+    .dropzone input[type="file"] {
+      display: none;
+    }
+
+    .file-preview-info {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 14px;
+      background: rgba(79, 70, 229, 0.15);
+      border: 1px solid rgba(79, 70, 229, 0.3);
+      border-radius: 8px;
+      font-size: 13px;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Button */
+    .btn-submit {
+      width: 100%;
+      padding: 13px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      margin-top: 6px;
+    }
+
+    .btn-submit:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Status & Progress */
+    .progress-container {
+      display: none;
+      margin-top: 16px;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: var(--input-bg);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #4f46e5, #a855f7);
+      transition: width 0.2s ease;
+    }
+
+    .status-text {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Result Box */
+    .result-card {
+      display: none;
+      margin-top: 22px;
+      padding: 18px;
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--success);
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .link-wrapper {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .link-wrapper input {
+      background: #1f2937;
+      color: #38bdf8;
+      font-family: monospace;
+      font-size: 13px;
+    }
+
+    .btn-icon {
+      padding: 0 14px;
+      background: var(--card-border);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .btn-icon:hover {
+      background: #475569;
+    }
+
+    .btn-copy {
+      background: var(--success);
+    }
+    .btn-copy:hover {
+      background: var(--success-hover);
+    }
+
+    video {
+      width: 100%;
+      border-radius: 8px;
+      background: #000;
+      max-height: 280px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>Video API Hub</h1>
+      <p>Tải video lên hoặc trích xuất link tải video qua API</p>
+    </div>
+
+    <div class="card">
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('upload')">
+          <i data-lucide="upload-cloud" style="width: 18px; height: 18px;"></i>
+          Upload File Lên API
+        </button>
+        <button class="tab-btn" onclick="switchTab('download')">
+          <i data-lucide="download" style="width: 18px; height: 18px;"></i>
+          Lấy Link Video Tải Về
+        </button>
+      </div>
+
+      <!-- TAB 1: UPLOAD FILE -->
+      <div id="tab-upload" class="tab-content active">
+        <!-- Toggle cấu hình API Endpoint -->
+        <div class="api-config-toggle" onclick="toggleConfig('upload-config')">
+          <i data-lucide="settings" style="width: 14px; height: 14px;"></i>
+          <span>Cấu hình API Upload (Endpoint URL)</span>
+        </div>
+        <div id="upload-config" class="api-config-box">
+          <label>API Upload Endpoint:</label>
+          <input type="url" id="uploadApiUrl" value="https://httpbin.org/post" placeholder="https://your-api.com/api/upload">
+          <label style="margin-top: 8px;">Tên trường FormData (Key):</label>
+          <input type="text" id="uploadKey" value="video" placeholder="video hoặc file">
+        </div>
+
+        <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+          <i data-lucide="video" style="width: 38px; height: 38px;"></i>
+          <p><strong>Nhấp để chọn file</strong> hoặc kéo thả video vào đây</p>
+          <p style="font-size: 12px; margin-top: 4px;">Hỗ trợ MP4, WebM, MOV, MKV, AVI...</p>
+          <input type="file" id="fileInput" accept="video/*" onchange="handleFileSelected(this.files)">
+        </div>
+
+        <div id="fileInfoBox" style="display: none;" class="file-preview-info">
+          <span id="fileNameDisplay" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;"></span>
+          <span id="fileSizeDisplay" style="color: #94a3b8;"></span>
+        </div>
+
+        <button id="btnUpload" class="btn-submit" style="margin-top: 16px;" onclick="startUpload()">
+          <i data-lucide="arrow-up-circle" style="width: 18px; height: 18px;"></i>
+          Tải Video Lên
+        </button>
+      </div>
+
+      <!-- TAB 2: GET DOWNLOAD LINK BY URL -->
+      <div id="tab-download" class="tab-content">
+        <div class="api-config-toggle" onclick="toggleConfig('download-config')">
+          <i data-lucide="settings" style="width: 14px; height: 14px;"></i>
+          <span>Cấu hình API Bóc Tách / Download</span>
+        </div>
+        <div id="download-config" class="api-config-box">
+          <label>API Download/Extractor Endpoint:</label>
+          <input type="url" id="downloadApiUrl" value="https://httpbin.org/post" placeholder="https://your-api.com/api/get-video">
+        </div>
+
+        <div class="form-group">
+          <label for="videoSourceUrl">Dán link Video (TikTok, YouTube, MP4,...):</label>
+          <input type="url" id="videoSourceUrl" placeholder="https://example.com/video-watch-link">
+        </div>
+
+        <button id="btnExtract" class="btn-submit" onclick="startExtract()">
+          <i data-lucide="link-2" style="width: 18px; height: 18px;"></i>
+          Gửi Tới API & Lấy Link Tải
+        </button>
+      </div>
+
+      <!-- Progress & Status -->
+      <div id="progressContainer" class="progress-container">
+        <div class="progress-bar-bg">
+          <div id="progressBar" class="progress-bar-fill"></div>
+        </div>
+        <div id="statusMessage" class="status-text">Đang kết nối API...</div>
+      </div>
+
+      <!-- Result Section -->
+      <div id="resultCard" class="result-card">
+        <div class="result-header">
+          <i data-lucide="check-circle-2" style="width: 18px; height: 18px;"></i>
+          <span>API đã trả về link video thành công!</span>
+        </div>
+
+        <label>Link Video Trực Tiếp:</label>
+        <div class="link-wrapper">
+          <input type="text" id="finalLinkInput" readonly>
+          <button class="btn-icon btn-copy" title="Sao chép" onclick="copyLink()">
+            <i data-lucide="copy" style="width: 16px; height: 16px;"></i>
+          </button>
+          <a id="openLinkBtn" href="#" target="_blank" class="btn-icon" style="text-decoration: none;" title="Mở link">
+            <i data-lucide="external-link" style="width: 16px; height: 16px;"></i>
+          </a>
+        </div>
+
+        <video id="previewPlayer" controls style="display: none;"></video>
+      </div>
+    </div>
+
+    <div class="footer">
+      Mở file trực tiếp trong trình duyệt hoặc tích hợp vào hệ thống backend của bạn.
+    </div>
+  </div>
+
+  <script>
+    // Khởi tạo icon Lucide
+    lucide.createIcons();
+
+    let selectedFile = null;
+
+    // Chuyển Tab
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      if (tabName === 'upload') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('tab-upload').classList.add('active');
+      } else {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('tab-download').classList.add('active');
+      }
+      hideResult();
+    }
+
+    function toggleConfig(id) {
+      const box = document.getElementById(id);
+      box.classList.toggle('open');
+    }
+
+    // Drag & Drop
+    const dropzone = document.getElementById('dropzone');
+    ['dragenter', 'dragover'].forEach(name => {
+      dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(name => {
+      dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); });
+    });
+    dropzone.addEventListener('drop', (e) => {
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleFileSelected(e.dataTransfer.files);
+      }
+    });
+
+    function handleFileSelected(files) {
+      if (!files || files.length === 0) return;
+      selectedFile = files[0];
+      
+      document.getElementById('fileNameDisplay').innerText = selectedFile.name;
+      document.getElementById('fileSizeDisplay').innerText = (selectedFile.size / (1024 * 1024)).toFixed(2) + " MB";
+      document.getElementById('fileInfoBox').style.display = 'flex';
+      hideResult();
+    }
+
+    // TAB 1: Upload File Video lên API
+    async function startUpload() {
+      if (!selectedFile) {
+        alert("Vui lòng chọn hoặc kéo thả một file video!");
+        return;
+      }
+
+      const apiUrl = document.getElementById('uploadApiUrl').value.trim();
+      const formKey = document.getElementById('uploadKey').value.trim() || 'video';
+
+      if (!apiUrl) {
+        alert("Vui lòng nhập API Endpoint URL!");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append(formKey, selectedFile);
+
+      setLoading(true, "Đang tải video lên API...");
+
+      try {
+        // Dùng XMLHttpRequest để theo dõi % Upload Progress
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", apiUrl, true);
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            updateProgress(percent, `Đang tải lên: ${percent}%`);
+          }
+        };
+
+        xhr.onload = () => {
+          setLoading(false);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            let res;
+            try {
+              res = JSON.parse(xhr.responseText);
+            } catch (err) {
+              res = { text: xhr.responseText };
+            }
+
+            // Tự động tìm link trong response JSON
+            const returnedUrl = res.url || res.link || res.data?.url || res.video_url || (res.files && "Demo: File nhận thành công trên API") || URL.createObjectURL(selectedFile);
+            showResult(returnedUrl);
+          } else {
+            alert(`Lỗi API: Mã lỗi ${xhr.status} - ${xhr.statusText}`);
+          }
+        };
+
+        xhr.onerror = () => {
+          setLoading(false);
+          alert("Lỗi kết nối tới API. Vui lòng kiểm tra lại URL hoặc cài đặt CORS trên máy chủ!");
+        };
+
+        xhr.send(formData);
+
+      } catch (err) {
+        setLoading(false);
+        alert("Đã xảy ra lỗi: " + err.message);
+      }
+    }
+
+    // TAB 2: Gửi link video tới API bóc tách/download
+    async function startExtract() {
+      const sourceUrl = document.getElementById('videoSourceUrl').value.trim();
+      const apiUrl = document.getElementById('downloadApiUrl').value.trim();
+
+      if (!sourceUrl) {
+        alert("Vui lòng nhập link video!");
+        return;
+      }
+
+      setLoading(true, "Đang gửi yêu cầu tới API...");
+      updateProgress(50, "Đang xử lý lấy link...");
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: sourceUrl })
+        });
+
+        const data = await response.json();
+        setLoading(false);
+
+        // Lấy link trả về từ API
+        const videoLink = data.download_url || data.url || data.link || data.data?.url || sourceUrl;
+        showResult(videoLink);
+
+      } catch (err) {
+        setLoading(false);
+        alert("Lỗi khi gọi API: " + err.message);
+      }
+    }
+
+    // Tiện ích UI
+    function setLoading(isLoading, text) {
+      document.getElementById('btnUpload').disabled = isLoading;
+      document.getElementById('btnExtract').disabled = isLoading;
+      const progressBox = document.getElementById('progressContainer');
+      progressBox.style.display = isLoading ? 'block' : 'none';
+      if (isLoading) {
+        document.getElementById('statusMessage').innerText = text || 'Đang xử lý...';
+        document.getElementById('progressBar').style.width = '10%';
+      }
+    }
+
+    function updateProgress(percent, text) {
+      document.getElementById('progressBar').style.width = percent + '%';
+      if (text) document.getElementById('statusMessage').innerText = text;
+    }
+
+    function showResult(url) {
+      const resultCard = document.getElementById('resultCard');
+      const finalLinkInput = document.getElementById('finalLinkInput');
+      const openLinkBtn = document.getElementById('openLinkBtn');
+      const previewPlayer = document.getElementById('previewPlayer');
+
+      finalLinkInput.value = url;
+      openLinkBtn.href = url;
+
+      // Thử phát video nếu là link hợp lệ
+      if (url.startsWith('http') || url.startsWith('blob:')) {
+        previewPlayer.src = url;
+        previewPlayer.style.display = 'block';
+      } else {
+        previewPlayer.style.display = 'none';
+      }
+
+      resultCard.style.display = 'block';
+      lucide.createIcons();
+    }
+
+    function hideResult() {
+      document.getElementById('resultCard').style.display = 'none';
+    }
+
+    function copyLink() {
+      const input = document.getElementById('finalLinkInput');
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      alert("Đã sao chép link video vào clipboard!");
+    }
+  </script>
+</body>
+</html>
