@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { getGoogleSheetConfig, saveGoogleSheetConfig } = require('./api/_sheets');
 
 const PORT = 5000;
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
@@ -273,6 +274,39 @@ const handler = (req, res) => {
     }).catch(err => {
       res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ status: 'error', message: err.message }));
+    });
+    return;
+  }
+
+  // API Lấy cấu hình các API từ Google Sheet tab API
+  if (req.method === 'GET' && req.url === '/api/get-config') {
+    getGoogleSheetConfig().then(config => {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ status: 'success', data: config }));
+    }).catch(err => {
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ status: 'error', message: err.message }));
+    });
+    return;
+  }
+
+  // API Lưu cấu hình các API vào Google Sheet tab API
+  if (req.method === 'POST' && req.url === '/api/save-config') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const configData = JSON.parse(body || '{}');
+        const success = await saveGoogleSheetConfig(configData);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({
+          status: success ? 'success' : 'error',
+          message: success ? 'Đã lưu cấu hình thành công vào Google Sheet tab API!' : 'Lỗi khi lưu vào Google Sheet API'
+        }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ status: 'error', message: err.message }));
+      }
     });
     return;
   }
