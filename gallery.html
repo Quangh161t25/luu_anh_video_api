@@ -1425,52 +1425,85 @@
       });
     });
 
+    // Base API helper
+    function getApiBase() {
+      if (window.location.origin && window.location.origin.startsWith('http') && !window.location.origin.includes('github.io')) {
+        return window.location.origin;
+      }
+      return 'http://localhost:5000';
+    }
+
     // Fetch data from Node API or Fallback CSV
     async function fetchSheetData(isManual = false) {
       const refreshIcon = document.getElementById('refreshIcon');
       if (refreshIcon) refreshIcon.style.animation = 'spin 0.8s linear infinite';
+      if (isManual) showToast('⏳ Đang kết nối lấy dữ liệu từ Google Sheet DATA...');
 
+      let rows = [];
+
+      // 1. Thử gọi qua API Server Local cổng 5000 (Hỗ trợ cả khi mở file:/// trực tiếp)
       try {
-        let loaded = false;
-        // Try Backend Node API
+        const apiBase = getApiBase();
+        const res = await fetch(`${apiBase}/api/get-sheet-videos`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
+            rows = json.data;
+          }
+        }
+      } catch (e) {
+        console.warn('API local server không phản hồi, thử tải CSV trực tiếp từ Google Sheet...', e);
+      }
+
+      // 2. Fallback nếu local server offline hoặc trên GitHub Pages: dùng Google Sheet CSV Export
+      if (rows.length === 0) {
         try {
-          const res = await fetch('/api/get-sheet-videos');
-          if (res.ok) {
-            const json = await res.json();
-            if (json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
-              allMediaItems = json.data.map(formatRowData);
-              loaded = true;
+          const csvUrl = 'https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/export?format=csv&gid=0';
+          const csvRes = await fetch(csvUrl);
+          if (csvRes.ok) {
+            const csvText = await csvRes.text();
+            const parsed = parseCsvRows(csvText);
+            if (parsed.length > 0) {
+              rows = parsed;
             }
           }
-        } catch (e) {
-          console.warn('API node không phản hồi, thử tải CSV trực tiếp từ Google Sheet...', e);
+        } catch (csvErr) {
+          console.warn('CSV export gid=0 error:', csvErr);
         }
+      }
 
-        // Fallback to Google Sheet CSV
-        if (!loaded) {
-          const csvRes = await fetch(SHEET_CSV_URL);
-          const csvText = await csvRes.text();
-          const parsed = parseCsvRows(csvText);
-          if (parsed.length > 0) {
-            allMediaItems = parsed.map(formatRowData);
-            loaded = true;
+      // 3. Fallback tiếp tục với tab DATA
+      if (rows.length === 0) {
+        try {
+          const csvUrl2 = 'https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/gviz/tq?tqx=out:csv&sheet=DATA';
+          const csvRes2 = await fetch(csvUrl2);
+          if (csvRes2.ok) {
+            const csvText2 = await csvRes2.text();
+            const parsed2 = parseCsvRows(csvText2);
+            if (parsed2.length > 0) {
+              rows = parsed2;
+            }
           }
-        }
+        } catch (csvErr2) {}
+      }
 
-        if (!loaded && allMediaItems.length === 0) {
-          // Default demo sample if empty
-          allMediaItems = getSampleData();
-        }
-
+      if (rows.length > 0) {
+        allMediaItems = rows.map(formatRowData);
         updateCounts();
         renderMedia();
-        if (isManual) showToast('✅ Đã đồng bộ dữ liệu mới nhất từ Google Sheet DATA!');
-      } catch (err) {
-        console.error('Lỗi khi tải Google Sheet:', err);
-        showToast('⚠️ Không thể kết nối Google Sheet, hiển thị dữ liệu cục bộ.', true);
-      } finally {
-        if (refreshIcon) refreshIcon.style.animation = 'none';
+        if (isManual) {
+          showToast(`🎉 Đã đồng bộ ${rows.length} mục từ Google Sheet DATA!`);
+        }
+      } else {
+        if (allMediaItems.length === 0) {
+          allMediaItems = getSampleData();
+          updateCounts();
+          renderMedia();
+        }
+        showToast('⚠️ Không thể kết nối Google Sheet, hãy bật server node server.js.', true);
       }
+
+      if (refreshIcon) refreshIcon.style.animation = 'none';
     }
 
     // Format row item
@@ -1971,7 +2004,7 @@
 
         if (syncSheet) {
           try {
-            await fetch('/api/save-to-sheet', {
+            await fetch(`${getApiBase()}/api/save-to-sheet`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(newItem)
