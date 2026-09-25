@@ -1323,6 +1323,33 @@
       }
     }
 
+    const DEFAULT_CONFIG = {
+      sheet_webapp_url: '',
+      cld_name: 'qeld2qwe',
+      cld_preset: 'video_preset',
+      catbox_userhash: '',
+      litter_time: '72h',
+      tg_token: '8192862731:AAGitIiHpAX-4haL8Xw79WanvVa7nYc2UDI',
+      tg_chatid: '-1004258626019',
+      dood_key: '',
+      sb_url: '',
+      sb_key: ''
+    };
+
+    function loadSavedConfig() {
+      let config = Object.assign({}, DEFAULT_CONFIG);
+      const saved = localStorage.getItem('media_hub_config_v2') || localStorage.getItem('media_hub_config');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === 'object') {
+            config = Object.assign(config, parsed);
+          }
+        } catch(e) {}
+      }
+      applyConfigToForm(config);
+    }
+
     async function fetchConfigFromSheet(showToastAlert = false) {
       const statusEl = document.getElementById('apiSyncStatusText');
       if (showToastAlert && statusEl) {
@@ -1345,17 +1372,20 @@
         for (const ep of endpoints) {
           try {
             const res = await fetch(ep);
-            const data = await res.json();
-            if (data.status === 'success' && data.data) {
-              sheetConfig = data.data;
-              break;
+            if (res.ok) {
+              const data = await res.json();
+              if (data.status === 'success' && data.data && Object.keys(data.data).length > 0) {
+                sheetConfig = data.data;
+                break;
+              }
             }
           } catch(e) {}
         }
 
         if (sheetConfig && Object.keys(sheetConfig).length > 0) {
-          applyConfigToForm(sheetConfig);
-          localStorage.setItem('media_hub_config_v2', JSON.stringify(sheetConfig));
+          const merged = Object.assign({}, DEFAULT_CONFIG, sheetConfig);
+          applyConfigToForm(merged);
+          localStorage.setItem('media_hub_config_v2', JSON.stringify(merged));
 
           const nowStr = new Date().toLocaleTimeString('vi-VN');
           if (statusEl) {
@@ -1369,18 +1399,9 @@
         console.warn('Không thể nạp từ Google Sheet API:', err);
       }
 
-      // Fallback nếu không kết nối được sheet: dùng LocalStorage
+      // Fallback nếu không kết nối được sheet: dùng LocalStorage / DEFAULT_CONFIG
       loadSavedConfig();
-    }
-
-    function loadSavedConfig() {
-      const saved = localStorage.getItem('media_hub_config_v2') || localStorage.getItem('media_hub_config');
-      if (saved) {
-        try {
-          const config = JSON.parse(saved);
-          applyConfigToForm(config);
-        } catch(e) {}
-      }
+      if (showToastAlert) showToast('ℹ️ Đã nạp cấu hình đã lưu trên thiết bị.');
     }
 
     // Drag & Drop (Nhiều tệp)
