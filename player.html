@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Stream & Playlist Player - Xem Video Từ Link & Google Sheet</title>
+  <!-- Google Fonts, Lucide Icons & HLS.js -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --success: #10b981;
+      --success-hover: #059669;
+      --bg: #0b0f19;
+      --card-bg: #151c2e;
+      --card-border: #263352;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --input-bg: #0b0f19;
+      --input-border: #334155;
+      --accent: #38bdf8;
+      --sheet-green: #0f9d58;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      background-image: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15), transparent 50%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+    }
+
+    /* Top Navigation Bar */
+    .nav-bar {
+      width: 100%;
+      max-width: 1240px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: rgba(21, 28, 46, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a5b4fc 0%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-btn {
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+    }
+
+    .nav-btn:hover {
+      background: rgba(99, 102, 241, 0.15);
+      color: #cbd5e1;
+    }
+
+    .nav-btn.active {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+    }
+
+    .nav-btn-sheet {
+      border-color: rgba(15, 157, 88, 0.4);
+      background: rgba(15, 157, 88, 0.15);
+      color: #34d399;
+    }
+
+    .nav-btn-sheet:hover {
+      background: rgba(15, 157, 88, 0.3);
+      color: white;
+    }
+
+    /* Main Container */
+    .container {
+      width: 100%;
+      max-width: 1240px;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Left: Player & Link Input */
+    .main-column {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Video Player Box */
+    .player-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .player-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: #64748b;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .player-placeholder .play-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(99, 102, 241, 0.15);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Player Controls Bar */
+    .player-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ctrl-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .ctrl-btn:hover {
+      background: #334155;
+      color: white;
+    }
+
+    .ctrl-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    select.ctrl-select {
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #38bdf8;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Playing Video Info */
+    .video-info {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .video-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .video-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .type-badge {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+
+    .url-bar {
+      display: flex;
+      gap: 8px;
+    }
+
+    .url-bar input {
+      flex: 1;
+      padding: 9px 12px;
+      background: #0b0f19;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #38bdf8;
+      font-family: monospace;
+      font-size: 12px;
+      outline: none;
+    }
+
+    /* Input Link Box */
+    .input-box {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .input-row input {
+      flex: 1;
+      min-width: 260px;
+      padding: 12px 16px;
+      background: #0b0f19;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .input-row input:focus {
+      border-color: var(--primary);
+    }
+
+    .btn-play-now {
+      padding: 0 20px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-play-now:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+
+    .btn-add-queue {
+      padding: 0 16px;
+      height: 44px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #38bdf8;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-add-queue:hover {
+      background: #334155;
+      color: white;
+    }
+
+    .quick-source-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .source-btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: #cbd5e1;
+      transition: all 0.2s;
+    }
+
+    .source-btn:hover {
+      background: #1e293b;
+      color: white;
+      border-color: #6366f1;
+    }
+
+    .source-btn-sheet {
+      border-color: rgba(15, 157, 88, 0.5);
+      background: rgba(15, 157, 88, 0.12);
+      color: #34d399;
+    }
+
+    .source-btn-sheet:hover {
+      background: rgba(15, 157, 88, 0.25);
+      color: #6ee7b7;
+    }
+
+    /* Batch Paste Modal / Box */
+    .batch-paste-box {
+      display: none;
+      background: #0b0f19;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 14px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .batch-paste-box textarea {
+      width: 100%;
+      height: 100px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #38bdf8;
+      font-family: monospace;
+      font-size: 12px;
+      padding: 10px;
+      outline: none;
+      resize: vertical;
+      margin-bottom: 10px;
+    }
+
+    /* Right Column: Playlist */
+    .playlist-column {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .playlist-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .playlist-search {
+      width: 100%;
+      padding: 10px 14px;
+      background: #0b0f19;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 12px;
+      outline: none;
+      margin-bottom: 10px;
+    }
+
+    .playlist-search:focus {
+      border-color: var(--primary);
+    }
+
+    .playlist-items {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 560px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .playlist-items::-webkit-scrollbar {
+      width: 6px;
+    }
+    .playlist-items::-webkit-scrollbar-track {
+      background: #0b0f19;
+      border-radius: 4px;
+    }
+    .playlist-items::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+
+    .playlist-item {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .playlist-item:hover {
+      border-color: #6366f1;
+      background: rgba(99, 102, 241, 0.08);
+      transform: translateX(2px);
+    }
+
+    .playlist-item.active {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+    }
+
+    .item-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .item-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #0f172a;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .playlist-item.active .item-icon {
+      background: #38bdf8;
+      color: #0b0f19;
+    }
+
+    .item-details {
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .item-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-meta {
+      font-size: 11px;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .item-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .item-action-btn {
+      background: transparent;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+
+    .item-action-btn:hover {
+      color: #f87171;
+    }
+
+    .playlist-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--card-border);
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .empty-playlist {
+      padding: 30px 10px;
+      text-align: center;
+      color: #64748b;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      background: #10b981;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      display: none;
+      z-index: 100;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <nav class="nav-bar">
+    <a href="player.html" class="nav-brand">
+      <i data-lucide="play-square" style="width: 22px; height: 22px; color: #38bdf8;"></i>
+      <span>Video Player & Stream Hub</span>
+    </a>
+    <div class="nav-links">
+      <a href="/" class="nav-btn">
+        <i data-lucide="upload-cloud" style="width: 15px; height: 15px;"></i> Trang Tải Lên Media
+      </a>
+      <a href="/gallery" class="nav-btn">
+        <i data-lucide="layout-grid" style="width: 15px; height: 15px;"></i> Bộ Sưu Tập Media & Ảnh
+      </a>
+      <a href="/player" class="nav-btn active">
+        <i data-lucide="film" style="width: 15px; height: 15px;"></i> Xem Video Từ Link
+      </a>
+      <a href="https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/edit?gid=1623547844#gid=1623547844" target="_blank" class="nav-btn nav-btn-sheet">
+        <i data-lucide="sheet" style="width: 15px; height: 15px;"></i> Mở Sheet DATA
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main Content Grid -->
+  <div class="container">
+    
+    <!-- LEFT: Video Player & Inputs -->
+    <div class="main-column">
+      
+      <!-- Video Player Card -->
+      <div class="card">
+        <div class="player-wrap" id="playerWrap">
+          <!-- Placeholder when empty -->
+          <div class="player-placeholder" id="playerPlaceholder">
+            <div class="play-icon">
+              <i data-lucide="play" style="width: 32px; height: 32px; margin-left: 4px;"></i>
+            </div>
+            <p><strong>Chưa có video nào đang phát</strong></p>
+            <p style="font-size: 12px; max-width: 360px;">Dán đường link video (MP4, MKV, M3U8, Catbox, Cloudinary, YouTube...) hoặc bấm nút lấy video từ Google Sheet DATA để xem.</p>
+          </div>
+
+          <!-- HTML5 Video Player -->
+          <video id="mainVideoPlayer" controls playsinline style="display: none;"></video>
+          
+          <!-- Web Embed Iframe Player -->
+          <iframe id="mainEmbedPlayer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen style="display: none;"></iframe>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="player-controls">
+          <div class="control-group">
+            <span style="font-size: 12px; color: #94a3b8;"><i data-lucide="gauge" style="width: 13px; height: 13px; display: inline;"></i> Tốc độ:</span>
+            <select class="ctrl-select" id="speedSelect" onchange="changePlaybackRate(this.value)">
+              <option value="0.5">0.5x</option>
+              <option value="0.75">0.75x</option>
+              <option value="1.0" selected>1.0x (Chuẩn)</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2.0">2.0x</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <button type="button" class="ctrl-btn" id="btnPip" onclick="togglePip()">
+              <i data-lucide="picture-in-picture-2" style="width: 14px; height: 14px;"></i> PiP
+            </button>
+            <button type="button" class="ctrl-btn" id="btnLoop" onclick="toggleLoop()">
+              <i data-lucide="repeat" style="width: 14px; height: 14px;"></i> Lặp lại
+            </button>
+            <button type="button" class="ctrl-btn" id="btnAutoNext" onclick="toggleAutoNext()">
+              <i data-lucide="skip-forward" style="width: 14px; height: 14px;"></i> Tự chuyển bài: Bật
+            </button>
+          </div>
+        </div>
+
+        <!-- Current Video Info Panel -->
+        <div class="video-info" id="videoInfoPanel" style="display: none;">
+          <div class="video-title-row">
+            <span class="video-title">
+              <i data-lucide="film" style="width: 18px; height: 18px; color: #38bdf8;"></i>
+              <span id="currentVideoTitle">Tên Video Đang Phát</span>
+            </span>
+            <span class="type-badge" id="currentVideoBadge">MP4</span>
+          </div>
+          <div class="url-bar">
+            <input type="text" id="currentVideoUrl" readonly>
+            <button class="ctrl-btn" onclick="copyCurrentLink()" style="background: var(--success); color: white; border: none;">
+              <i data-lucide="copy" style="width: 13px; height: 13px;"></i> Copy
+            </button>
+            <a id="currentVideoExternal" href="#" target="_blank" class="ctrl-btn" style="background: var(--primary); color: white; text-decoration: none;">
+              <i data-lucide="external-link" style="width: 13px; height: 13px;"></i> Mở gốc
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Link & Quick Import Card -->
+      <div class="card input-box">
+        <span class="section-title">
+          <i data-lucide="link-2" style="width: 18px; height: 18px;"></i>
+          <span>Thêm Video Để Xem (MP4, MKV, M3U8, Catbox, Cloudinary, YouTube, GoFile,...)</span>
+        </span>
+
+        <!-- Single Link Input -->
+        <div class="input-row">
+          <input type="url" id="singleUrlInput" placeholder="Dán link video tại đây (vd: https://files.catbox.moe/...mp4)..." onkeydown="if(event.key==='Enter') playSingleUrl()">
+          <button class="btn-play-now" onclick="playSingleUrl()">
+            <i data-lucide="play" style="width: 15px; height: 15px;"></i> Phát Ngay
+          </button>
+          <button class="btn-add-queue" onclick="addToPlaylistFromInput()">
+            <i data-lucide="plus" style="width: 15px; height: 15px;"></i> Thêm Vào Playlist
+          </button>
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <div class="quick-source-bar">
+          <button type="button" class="source-btn source-btn-sheet" onclick="fetchFromGoogleSheet()">
+            <i data-lucide="sheet" style="width: 14px; height: 14px;"></i> 🔄 Lấy Toàn Bộ Video Từ Sheet DATA
+          </button>
+          <button type="button" class="source-btn" onclick="toggleBatchPaste()">
+            <i data-lucide="list-plus" style="width: 14px; height: 14px;"></i> 📋 Dán Hàng Loạt Link (Batch)
+          </button>
+          <button type="button" class="source-btn" onclick="document.getElementById('localFileInput').click()">
+            <i data-lucide="folder-video" style="width: 14px; height: 14px;"></i> 📂 Mở Video Từ Máy
+          </button>
+          <input type="file" id="localFileInput" accept="video/*" style="display: none;" onchange="handleLocalVideo(this.files)">
+        </div>
+
+        <!-- Batch Paste Area -->
+        <div class="batch-paste-box" id="batchPasteBox">
+          <label style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 6px;">Dán danh sách nhiều đường link (mỗi link 1 dòng):</label>
+          <textarea id="batchTextarea" placeholder="https://files.catbox.moe/k5owqw.mp4&#10;https://res.cloudinary.com/.../video.mp4&#10;https://gofile.io/..."></textarea>
+          <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button type="button" class="ctrl-btn" onclick="toggleBatchPaste()">Hủy</button>
+            <button type="button" class="btn-play-now" onclick="processBatchLinks()" style="height: 36px; padding: 0 16px;">
+              <i data-lucide="check" style="width: 14px; height: 14px;"></i> Thêm Vào Playlist
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Playlist Sidebar -->
+    <div class="playlist-column card">
+      <div class="playlist-header">
+        <span class="section-title">
+          <i data-lucide="list-music" style="width: 18px; height: 18px;"></i>
+          <span id="playlistCountTitle">Danh Sách Video (0)</span>
+        </span>
+        <button type="button" class="ctrl-btn" onclick="clearPlaylist()" style="color: #f87171;" title="Xóa toàn bộ playlist">
+          <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i> Xóa
+        </button>
+      </div>
+
+      <!-- Search in playlist -->
+      <input type="text" class="playlist-search" id="playlistSearch" placeholder="🔍 Tìm kiếm video theo tên..." oninput="filterPlaylist()">
+
+      <!-- Playlist Items Container -->
+      <div class="playlist-items" id="playlistContainer">
+        <!-- Will be rendered by JS -->
+      </div>
+
+      <!-- Playlist Footer Actions -->
+      <div class="playlist-footer">
+        <span id="playlistStatsText">0 video</span>
+        <button type="button" class="ctrl-btn" onclick="copyAllPlaylistLinks()">
+          <i data-lucide="copy" style="width: 12px; height: 12px;"></i> Copy tất cả link
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast" class="toast">Đã sao chép đường link!</div>
+
+  <script>
+    lucide.createIcons();
+
+    let playlist = []; // Array of { id, title, url, ext, platform, date }
+    let currentIndex = -1;
+    let isLooping = false;
+    let autoNext = true;
+    let hlsInstance = null;
+
+    const videoPlayer = document.getElementById('mainVideoPlayer');
+    const embedPlayer = document.getElementById('mainEmbedPlayer');
+    const placeholder = document.getElementById('playerPlaceholder');
+
+    // Khởi tạo trang
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSavedPlaylist();
+      // Tự động load từ Google Sheet nếu playlist rỗng
+      if (playlist.length === 0) {
+        fetchFromGoogleSheet(false);
+      }
+    });
+
+    // Lắng nghe sự kiện kết thúc video để tự động phát bài kế tiếp
+    videoPlayer.addEventListener('ended', () => {
+      if (isLooping) {
+        videoPlayer.currentTime = 0;
+        videoPlayer.play();
+      } else if (autoNext && playlist.length > 0) {
+        playNext();
+      }
+    });
+
+    // Lưu & Tải Playlist từ LocalStorage
+    function savePlaylist() {
+      localStorage.setItem('media_hub_player_playlist_v1', JSON.stringify(playlist));
+    }
+
+    function loadSavedPlaylist() {
+      const saved = localStorage.getItem('media_hub_player_playlist_v1');
+      if (saved) {
+        try {
+          playlist = JSON.parse(saved);
+          renderPlaylist();
+        } catch(e) {}
+      }
+    }
+
+    // ==========================================
+    // PHÁT VIDEO CHÍNH
+    // ==========================================
+    function playVideo(index) {
+      if (index < 0 || index >= playlist.length) return;
+      currentIndex = index;
+      const item = playlist[index];
+
+      // Cập nhật UI Playlist
+      renderPlaylist();
+
+      // Cập nhật Video Info
+      document.getElementById('videoInfoPanel').style.display = 'block';
+      document.getElementById('currentVideoTitle').innerText = item.title;
+      document.getElementById('currentVideoBadge').innerText = item.ext.toUpperCase();
+      document.getElementById('currentVideoUrl').value = item.url;
+      document.getElementById('currentVideoExternal').href = item.url;
+
+      placeholder.style.display = 'none';
+
+      const url = item.url.trim();
+      const isHls = url.includes('.m3u8');
+      const isYouTube = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+      const isEmbed = url.includes('dood') || url.includes('dailymotion') || url.includes('vimeo');
+
+      // 1. Nếu là link YouTube hoặc Web Embed
+      if (isYouTube) {
+        const videoId = isYouTube[1];
+        videoPlayer.style.display = 'none';
+        videoPlayer.pause();
+        embedPlayer.style.display = 'block';
+        embedPlayer.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        return;
+      }
+
+      if (isEmbed && !url.match(/\.(mp4|webm|mkv|mov)($|\?)/i)) {
+        videoPlayer.style.display = 'none';
+        videoPlayer.pause();
+        embedPlayer.style.display = 'block';
+        embedPlayer.src = url;
+        return;
+      }
+
+      // 2. Nếu là HTML5 Video / HLS Stream
+      embedPlayer.style.display = 'none';
+      embedPlayer.src = '';
+      videoPlayer.style.display = 'block';
+
+      if (hlsInstance) {
+        hlsInstance.destroy();
+        hlsInstance = null;
+      }
+
+      if (isHls && Hls.isSupported()) {
+        hlsInstance = new Hls();
+        hlsInstance.loadSource(url);
+        hlsInstance.attachMedia(videoPlayer);
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+          videoPlayer.play().catch(e => console.log('Autoplay prevented:', e));
+        });
+      } else {
+        videoPlayer.src = url;
+        videoPlayer.load();
+        videoPlayer.play().catch(e => console.log('Autoplay prevented:', e));
+      }
+
+      // Áp dụng tốc độ phát
+      const speed = parseFloat(document.getElementById('speedSelect').value) || 1.0;
+      videoPlayer.playbackRate = speed;
+      videoPlayer.loop = isLooping;
+    }
+
+    function playNext() {
+      if (playlist.length === 0) return;
+      let nextIndex = currentIndex + 1;
+      if (nextIndex >= playlist.length) nextIndex = 0;
+      playVideo(nextIndex);
+    }
+
+    function playPrevious() {
+      if (playlist.length === 0) return;
+      let prevIndex = currentIndex - 1;
+      if (prevIndex < 0) prevIndex = playlist.length - 1;
+      playVideo(prevIndex);
+    }
+
+    // ==========================================
+    // NHẬP LINK & TẠO PLAYLIST
+    // ==========================================
+    function playSingleUrl() {
+      const input = document.getElementById('singleUrlInput');
+      const url = input.value.trim();
+      if (!url) {
+        showToast("⚠️ Vui lòng nhập hoặc dán đường link video!");
+        return;
+      }
+
+      const item = createPlaylistItem(url);
+      // Thêm vào đầu playlist và phát ngay
+      playlist.unshift(item);
+      savePlaylist();
+      renderPlaylist();
+      playVideo(0);
+      input.value = '';
+    }
+
+    function addToPlaylistFromInput() {
+      const input = document.getElementById('singleUrlInput');
+      const url = input.value.trim();
+      if (!url) {
+        showToast("⚠️ Vui lòng nhập hoặc dán đường link video!");
+        return;
+      }
+
+      const item = createPlaylistItem(url);
+      playlist.push(item);
+      savePlaylist();
+      renderPlaylist();
+      input.value = '';
+      showToast("✅ Đã thêm video vào danh sách phát!");
+    }
+
+    function toggleBatchPaste() {
+      const box = document.getElementById('batchPasteBox');
+      box.style.display = (box.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function processBatchLinks() {
+      const textarea = document.getElementById('batchTextarea');
+      const text = textarea.value.trim();
+      if (!text) {
+        showToast("⚠️ Vui lòng dán danh sách link video!");
+        return;
+      }
+
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l.startsWith('http'));
+      if (lines.length === 0) {
+        showToast("⚠️ Không tìm thấy đường link hợp lệ nào!");
+        return;
+      }
+
+      let count = 0;
+      lines.forEach(url => {
+        const exists = playlist.some(item => item.url === url);
+        if (!exists) {
+          playlist.push(createPlaylistItem(url));
+          count++;
+        }
+      });
+
+      savePlaylist();
+      renderPlaylist();
+      textarea.value = '';
+      toggleBatchPaste();
+      showToast(`🎉 Đã nạp thêm ${count} video vào playlist!`);
+
+      if (currentIndex === -1 && playlist.length > 0) {
+        playVideo(0);
+      }
+    }
+
+    // Mở video cục bộ từ máy tính
+    function handleLocalVideo(files) {
+      if (!files || files.length === 0) return;
+      const file = files[0];
+      const blobUrl = URL.createObjectURL(file);
+      const item = {
+        id: 'local_' + Date.now(),
+        title: file.name,
+        url: blobUrl,
+        ext: file.name.split('.').pop()?.toUpperCase() || 'VIDEO',
+        platform: 'Tệp Máy Tính',
+        date: new Date().toLocaleDateString('vi-VN')
+      };
+
+      playlist.unshift(item);
+      renderPlaylist();
+      playVideo(0);
+      showToast("📂 Đang phát video từ máy tính!");
+    }
+
+    // ==========================================
+    // ĐỒNG BỘ TỪ GOOGLE SHEET (DATA)
+    // ==========================================
+    async function fetchFromGoogleSheet(showSuccessToast = true) {
+      if (showSuccessToast) showToast("⏳ Đang kết nối lấy dữ liệu từ Google Sheet DATA...");
+
+      try {
+        let rows = [];
+
+        // 1. Thử gọi qua API Server Local cổng 5000
+        try {
+          const res = await fetch('http://localhost:5000/api/get-sheet-videos');
+          const data = await res.json();
+          if (data.status === 'success' && data.data) {
+            rows = data.data;
+          }
+        } catch (e) {
+          console.warn("Local server offline, fallback to public CSV export...", e);
+        }
+
+        // 2. Fallback nếu không chạy local server: dùng Google Sheets CSV Export công khai
+        if (rows.length === 0) {
+          try {
+            const csvUrl = 'https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/export?format=csv&gid=0';
+            const csvRes = await fetch(csvUrl);
+            const csvText = await csvRes.text();
+            const lines = csvText.split('\n');
+            for (let i = 1; i < lines.length; i++) {
+              const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim());
+              if (cols.length >= 5 && cols[4].startsWith('http')) {
+                rows.push({
+                  id: cols[0] || Date.now().toString(),
+                  ngay: cols[1] || '',
+                  dinh_dang: cols[3] || 'MP4',
+                  link: cols[4] || '',
+                  ten: cols[5] || 'Video_' + i,
+                  ghi_chu: cols[6] || ''
+                });
+              }
+            }
+          } catch(csvErr) {
+            console.warn("CSV export error:", csvErr);
+          }
+        }
+
+        if (rows.length > 0) {
+          let added = 0;
+          rows.forEach(r => {
+            const link = r.link.trim();
+            if (!link.startsWith('http')) return;
+
+            const exists = playlist.some(item => item.url === link);
+            if (!exists) {
+              const ext = r.dinh_dang || getExtFromUrl(link);
+              playlist.push({
+                id: r.id || 'sheet_' + Date.now() + '_' + Math.random(),
+                title: r.ten || extractFilename(link),
+                url: link,
+                ext: ext,
+                platform: getPlatformLabel(link),
+                date: r.ngay || ''
+              });
+              added++;
+            }
+          });
+
+          savePlaylist();
+          renderPlaylist();
+
+          if (showSuccessToast) {
+            showToast(`🎉 Đã đồng bộ ${rows.length} mục từ Google Sheet DATA!`);
+          }
+
+          if (currentIndex === -1 && playlist.length > 0) {
+            playVideo(0);
+          }
+        } else {
+          if (showSuccessToast) {
+            showToast("ℹ️ Chưa có video nào trong Google Sheet DATA.");
+          }
+        }
+      } catch (err) {
+        console.error("Lỗi lấy dữ liệu Sheet:", err);
+        if (showSuccessToast) {
+          showToast("❌ Lỗi khi tải dữ liệu từ Google Sheet: " + err.message);
+        }
+      }
+    }
+
+    // ==========================================
+    // RENDER DANH SÁCH PHÁT (PLAYLIST)
+    // ==========================================
+    function renderPlaylist() {
+      const container = document.getElementById('playlistContainer');
+      const countTitle = document.getElementById('playlistCountTitle');
+      const statsText = document.getElementById('playlistStatsText');
+      const searchTerm = document.getElementById('playlistSearch').value.toLowerCase().trim();
+
+      countTitle.innerText = `Danh Sách Video (${playlist.length})`;
+      statsText.innerText = `${playlist.length} video trong danh sách`;
+
+      const filtered = playlist.map((item, idx) => ({ ...item, originalIndex: idx })).filter(item => {
+        if (!searchTerm) return true;
+        return item.title.toLowerCase().includes(searchTerm) || item.ext.toLowerCase().includes(searchTerm) || item.url.toLowerCase().includes(searchTerm);
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-playlist">
+            <i data-lucide="folder-search" style="width: 32px; height: 32px; color: #475569;"></i>
+            <span>${playlist.length === 0 ? 'Playlist đang trống.' : 'Không tìm thấy video nào phù hợp.'}</span>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      container.innerHTML = '';
+      filtered.forEach(item => {
+        const isCurrent = (item.originalIndex === currentIndex);
+        const div = document.createElement('div');
+        div.className = `playlist-item ${isCurrent ? 'active' : ''}`;
+        div.onclick = (e) => {
+          if (e.target.closest('.item-action-btn')) return;
+          playVideo(item.originalIndex);
+        };
+
+        div.innerHTML = `
+          <div class="item-left">
+            <div class="item-icon">
+              <i data-lucide="${isCurrent ? 'volume-2' : 'play'}" style="width: 15px; height: 15px;"></i>
+            </div>
+            <div class="item-details">
+              <div class="item-name" title="${item.title}">${item.title}</div>
+              <div class="item-meta">
+                <span class="type-badge" style="font-size: 9px; padding: 1px 5px;">${item.ext}</span>
+                <span>•</span>
+                <span>${item.platform || 'Direct'}</span>
+                ${item.date ? `<span>•</span><span>${item.date}</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <div class="item-actions">
+            <button type="button" class="item-action-btn" onclick="copySingleLink('${item.url}')" title="Sao chép link">
+              <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
+            </button>
+            <button type="button" class="item-action-btn" onclick="removeItem(${item.originalIndex})" title="Xóa khỏi danh sách">
+              <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+
+      lucide.createIcons();
+    }
+
+    function filterPlaylist() {
+      renderPlaylist();
+    }
+
+    function removeItem(index) {
+      playlist.splice(index, 1);
+      if (currentIndex === index) {
+        if (playlist.length > 0) {
+          playVideo(Math.min(index, playlist.length - 1));
+        } else {
+          currentIndex = -1;
+          videoPlayer.style.display = 'none';
+          embedPlayer.style.display = 'none';
+          placeholder.style.display = 'flex';
+          document.getElementById('videoInfoPanel').style.display = 'none';
+        }
+      } else if (currentIndex > index) {
+        currentIndex--;
+      }
+      savePlaylist();
+      renderPlaylist();
+    }
+
+    function clearPlaylist() {
+      if (playlist.length === 0) return;
+      if (confirm("Bạn có chắc chắn muốn xóa toàn bộ danh sách phát?")) {
+        playlist = [];
+        currentIndex = -1;
+        videoPlayer.pause();
+        videoPlayer.style.display = 'none';
+        embedPlayer.src = '';
+        embedPlayer.style.display = 'none';
+        placeholder.style.display = 'flex';
+        document.getElementById('videoInfoPanel').style.display = 'none';
+        savePlaylist();
+        renderPlaylist();
+        showToast("Đã xóa danh sách phát!");
+      }
+    }
+
+    // ==========================================
+    // TIỆN ÍCH ĐIỀU KHIỂN & COPY
+    // ==========================================
+    function changePlaybackRate(rate) {
+      videoPlayer.playbackRate = parseFloat(rate);
+    }
+
+    function togglePip() {
+      if (document.pictureInPictureElement) {
+        document.exitPictureInPicture().catch(console.error);
+      } else if (document.pictureInPictureEnabled && videoPlayer.style.display !== 'none') {
+        videoPlayer.requestPictureInPicture().catch(console.error);
+      }
+    }
+
+    function toggleLoop() {
+      isLooping = !isLooping;
+      videoPlayer.loop = isLooping;
+      const btn = document.getElementById('btnLoop');
+      btn.classList.toggle('active', isLooping);
+      showToast(isLooping ? "🔁 Đã bật lặp lại video" : "Đã tắt lặp lại");
+    }
+
+    function toggleAutoNext() {
+      autoNext = !autoNext;
+      const btn = document.getElementById('btnAutoNext');
+      btn.innerHTML = `<i data-lucide="skip-forward" style="width: 14px; height: 14px;"></i> Tự chuyển bài: ${autoNext ? 'Bật' : 'Tắt'}`;
+      btn.classList.toggle('active', autoNext);
+      lucide.createIcons();
+    }
+
+    function copyCurrentLink() {
+      const url = document.getElementById('currentVideoUrl').value;
+      if (url) copySingleLink(url);
+    }
+
+    function copySingleLink(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        showToast("Đã sao chép đường link video!");
+      });
+    }
+
+    function copyAllPlaylistLinks() {
+      if (playlist.length === 0) {
+        showToast("⚠️ Danh sách phát đang trống!");
+        return;
+      }
+      const text = playlist.map(item => item.url).join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(`🎉 Đã sao chép toàn bộ ${playlist.length} đường link!`);
+      });
+    }
+
+    function createPlaylistItem(url) {
+      const ext = getExtFromUrl(url);
+      const title = extractFilename(url);
+      const platform = getPlatformLabel(url);
+      return {
+        id: 'vid_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+        title: title,
+        url: url,
+        ext: ext,
+        platform: platform,
+        date: new Date().toLocaleDateString('vi-VN')
+      };
+    }
+
+    function extractFilename(url) {
+      try {
+        const u = new URL(url);
+        const name = u.pathname.split('/').pop();
+        return decodeURIComponent(name) || 'Video_' + Date.now();
+      } catch(e) {
+        return 'Video_' + Date.now();
+      }
+    }
+
+    function getExtFromUrl(url) {
+      const clean = url.split('?')[0].split('#')[0];
+      const match = clean.match(/\.([a-z0-9]+)$/i);
+      return match ? match[1].toUpperCase() : 'MP4';
+    }
+
+    function getPlatformLabel(url) {
+      const u = url.toLowerCase();
+      if (u.includes('catbox.moe')) return 'Catbox';
+      if (u.includes('cloudinary.com')) return 'Cloudinary';
+      if (u.includes('telegram') || u.includes('t.me')) return 'Telegram';
+      if (u.includes('gofile.io')) return 'GoFile';
+      if (u.includes('dood')) return 'DoodStream';
+      if (u.includes('supabase.co')) return 'Supabase';
+      if (u.includes('youtube.com') || u.includes('youtu.be')) return 'YouTube';
+      return 'Direct Link';
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      toast.innerText = text;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+  </script>
+</body>
+</html>
