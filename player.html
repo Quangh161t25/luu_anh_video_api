@@ -532,21 +532,58 @@
       flex: 1;
     }
 
-    .item-icon {
-      width: 32px;
-      height: 32px;
+    .playlist-thumb {
+      width: 58px;
+      height: 38px;
       border-radius: 8px;
       background: #0f172a;
-      color: #38bdf8;
+      overflow: hidden;
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      border: 1px solid #334155;
     }
 
-    .playlist-item.active .item-icon {
-      background: #38bdf8;
+    .playlist-thumb img,
+    .playlist-thumb video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .playlist-thumb-play {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      opacity: 0.85;
+      transition: all 0.2s;
+    }
+
+    .playlist-item:hover .playlist-thumb-play {
+      opacity: 1;
+      background: rgba(99, 102, 241, 0.65);
+    }
+
+    .playlist-item.active .playlist-thumb-play {
+      opacity: 1;
+      background: rgba(56, 189, 248, 0.85);
       color: #0b0f19;
+    }
+
+    .playlist-fallback-icon {
+      width: 100%;
+      height: 100%;
+      background: #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #38bdf8;
     }
 
     .item-details {
@@ -1171,10 +1208,31 @@
           playVideo(item.originalIndex);
         };
 
+        const posterUrl = getVideoPosterUrl(item.url);
+        let thumbContent = '';
+        if (posterUrl) {
+          thumbContent = `
+            <img src="${posterUrl}" alt="thumb" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="playlist-fallback-icon" style="display:none;">
+              <i data-lucide="video" style="width:16px;height:16px;"></i>
+            </div>
+          `;
+        } else {
+          thumbContent = `
+            <video src="${item.url}#t=0.5" preload="metadata" muted playsinline onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"></video>
+            <div class="playlist-fallback-icon" style="display:none;">
+              <i data-lucide="video" style="width:16px;height:16px;"></i>
+            </div>
+          `;
+        }
+
         div.innerHTML = `
           <div class="item-left">
-            <div class="item-icon">
-              <i data-lucide="${isCurrent ? 'volume-2' : 'play'}" style="width: 15px; height: 15px;"></i>
+            <div class="playlist-thumb">
+              ${thumbContent}
+              <div class="playlist-thumb-play ${isCurrent ? 'playing' : ''}">
+                <i data-lucide="${isCurrent ? 'volume-2' : 'play'}" style="width: 14px; height: 14px; ${isCurrent ? 'fill:currentColor;' : ''}"></i>
+              </div>
             </div>
             <div class="item-details">
               <div class="item-name" title="${item.title}">${item.title}</div>
@@ -1334,6 +1392,30 @@
       if (u.includes('supabase.co')) return 'Supabase';
       if (u.includes('youtube.com') || u.includes('youtu.be')) return 'YouTube';
       return 'Direct Link';
+    }
+
+    function getVideoPosterUrl(url) {
+      if (!url) return null;
+      const u = url.trim();
+      
+      // YouTube
+      const ytMatch = u.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+      if (ytMatch) {
+        return `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+      }
+      
+      // Cloudinary: convert video extension to .jpg with smart thumbnail transformation
+      if (u.includes('res.cloudinary.com') && u.includes('/video/upload/')) {
+        return u.replace('/video/upload/', '/video/upload/so_1,w_600,c_fill,q_auto,f_auto/').replace(/\.(mp4|webm|mov|mkv|avi|m4v)($|\?)/i, '.jpg$2');
+      }
+
+      // Vimeo
+      const vimeoMatch = u.match(/vimeo\.com\/(?:video\/)?([0-9]+)/i);
+      if (vimeoMatch) {
+        return `https://vumbnail.com/${vimeoMatch[1]}.jpg`;
+      }
+
+      return null;
     }
 
     function showToast(text) {
