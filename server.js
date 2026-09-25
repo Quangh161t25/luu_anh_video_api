@@ -152,6 +152,35 @@ async function appendToGoogleSheet(rowData) {
   }
 }
 
+// Hàm lấy danh sách dữ liệu từ Google Sheet DATA
+async function getGoogleSheetRows() {
+  try {
+    const token = await getGoogleAccessToken();
+    if (!token) return [];
+    await ensureSheetAndHeaders(token);
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A2:G`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.values) {
+      return data.values.map(row => ({
+        id: row[0] || '',
+        ngay: row[1] || '',
+        ngay_gio: row[2] || '',
+        dinh_dang: row[3] || 'FILE',
+        link: row[4] || '',
+        ten: row[5] || '',
+        ghi_chu: row[6] || ''
+      }));
+    }
+    return [];
+  } catch (err) {
+    console.error('Lỗi đọc dữ liệu Google Sheet:', err.message);
+    return [];
+  }
+}
+
 const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -171,7 +200,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Phục vụ giao diện Web HTML trực tiếp từ http://localhost:5000/
+  // Phục vụ giao diện Web Upload trực tiếp từ http://localhost:5000/
   if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
     const indexPath = path.join(__dirname, 'index.html');
     if (fs.existsSync(indexPath)) {
@@ -179,6 +208,28 @@ const server = http.createServer((req, res) => {
       fs.createReadStream(indexPath).pipe(res);
       return;
     }
+  }
+
+  // Phục vụ giao diện Xem Video từ http://localhost:5000/player
+  if (req.method === 'GET' && (req.url === '/player' || req.url === '/player.html')) {
+    const playerPath = path.join(__dirname, 'player.html');
+    if (fs.existsSync(playerPath)) {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      fs.createReadStream(playerPath).pipe(res);
+      return;
+    }
+  }
+
+  // API Lấy danh sách video từ Google Sheet DATA
+  if (req.method === 'GET' && req.url === '/api/get-sheet-videos') {
+    getGoogleSheetRows().then(rows => {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ status: 'success', data: rows }));
+    }).catch(err => {
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ status: 'error', message: err.message }));
+    });
+    return;
   }
 
   // API Upload Catbox qua Server sử dụng node-catbox (100% không lỗi CORS)
