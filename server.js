@@ -220,6 +220,16 @@ const server = http.createServer((req, res) => {
     }
   }
 
+  // Phục vụ giao diện Bộ Sưu Tập & Quản Lý File từ http://localhost:5000/gallery
+  if (req.method === 'GET' && (req.url === '/gallery' || req.url === '/gallery.html')) {
+    const galleryPath = path.join(__dirname, 'gallery.html');
+    if (fs.existsSync(galleryPath)) {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      fs.createReadStream(galleryPath).pipe(res);
+      return;
+    }
+  }
+
   // API Lấy danh sách video từ Google Sheet DATA
   if (req.method === 'GET' && req.url === '/api/get-sheet-videos') {
     getGoogleSheetRows().then(rows => {
