@@ -1196,6 +1196,19 @@
 
     let saveTimeout = null;
 
+    // Helper lấy URL API Backend thông minh (hỗ trợ Localhost, Vercel & GitHub Pages trên điện thoại)
+    function getApiBase() {
+      const host = window.location.hostname;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        return (window.location.port === '5000') ? '' : 'http://localhost:5000';
+      }
+      if (host.includes('vercel.app')) {
+        return '';
+      }
+      // Khi mở trên GitHub Pages (quangh161t25.github.io) hoặc trên điện thoại
+      return 'https://luu-anh-video-api.vercel.app';
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       loadSavedConfig();
       fetchConfigFromSheet(false);
@@ -1267,7 +1280,14 @@
         let isSaved = false;
 
         // 1. Gửi qua Backend Server / Serverless function
-        const endpoints = ['/api/save-config', 'http://localhost:5000/api/save-config'];
+        const base = getApiBase();
+        const endpoints = [
+          `${base}/api/save-config`,
+          '/api/save-config',
+          'https://luu-anh-video-api.vercel.app/api/save-config',
+          'http://localhost:5000/api/save-config'
+        ];
+        
         for (const ep of endpoints) {
           try {
             const res = await fetch(ep, {
@@ -1314,7 +1334,14 @@
         let sheetConfig = null;
 
         // 1. Thử gọi API Backend Server / Vercel
-        const endpoints = ['/api/get-config', 'http://localhost:5000/api/get-config'];
+        const base = getApiBase();
+        const endpoints = [
+          `${base}/api/get-config`,
+          '/api/get-config',
+          'https://luu-anh-video-api.vercel.app/api/get-config',
+          'http://localhost:5000/api/get-config'
+        ];
+
         for (const ep of endpoints) {
           try {
             const res = await fetch(ep);
@@ -1719,9 +1746,10 @@
 
       if (syncStatus) syncStatus.innerHTML = `⏳ Đang lưu tệp ${currentIdx}/${totalCount} (${ext}) vào Google Sheet DATA...`;
 
-      // 1. Thử gửi qua Server Service Account cục bộ (Port 5000)
+      // 1. Thử gửi qua Server Service Account (Local hoặc Vercel)
       try {
-        const serverRes = await fetch('http://localhost:5000/api/save-to-sheet', {
+        const apiBase = getApiBase();
+        const serverRes = await fetch(`${apiBase}/api/save-to-sheet`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -1732,7 +1760,7 @@
           return;
         }
       } catch (serverErr) {
-        console.warn("Local server offline, fallback to Web App URL if available...", serverErr);
+        console.warn("Server API offline, fallback to Web App URL if available...", serverErr);
       }
 
       // 2. Fallback sang Google Apps Script Web App nếu có URL
@@ -1755,7 +1783,8 @@
     async function testGoogleSheetSync() {
       showToast("⏳ Đang kiểm tra kết nối Google Sheet...");
       try {
-        const res = await fetch('http://localhost:5000/api/save-to-sheet', {
+        const apiBase = getApiBase();
+        const res = await fetch(`${apiBase}/api/save-to-sheet`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
