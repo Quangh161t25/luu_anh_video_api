@@ -6,11 +6,27 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.statusCode = 200;
+    res.end();
+    return;
   }
 
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
   try {
-    const data = req.body || {};
+    let data = req.body;
+    if (!data) {
+      data = await new Promise((resolve) => {
+        let raw = '';
+        req.on('data', chunk => raw += chunk);
+        req.on('end', () => {
+          try { resolve(JSON.parse(raw || '{}')); } catch(e) { resolve({}); }
+        });
+      });
+    } else if (typeof data === 'string') {
+      try { data = JSON.parse(data); } catch(e) { data = {}; }
+    }
+
     const rowData = [
       data.id || Date.now().toString(),
       data.ngay || new Date().toLocaleDateString('vi-VN'),
@@ -22,11 +38,13 @@ module.exports = async (req, res) => {
     ];
 
     const success = await appendToGoogleSheet(rowData);
-    res.status(200).json({
+    res.statusCode = 200;
+    res.end(JSON.stringify({
       status: success ? 'success' : 'error',
       message: success ? 'Đã lưu thành công vào Google Sheet DATA!' : 'Không thể lưu vào Google Sheet'
-    });
+    }));
   } catch (err) {
-    res.status(500).json({ status: 'error', message: err.message });
+    res.statusCode = 500;
+    res.end(JSON.stringify({ status: 'error', message: err.message }));
   }
 };

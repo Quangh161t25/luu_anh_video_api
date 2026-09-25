@@ -1,4 +1,4 @@
-﻿const { saveGoogleSheetConfig } = require('./_sheets');
+const { saveGoogleSheetConfig } = require('./_sheets');
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -10,23 +10,39 @@ module.exports = async (req, res) => {
   );
 
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
+    res.statusCode = 200;
+    res.end();
     return;
   }
 
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
   try {
     let body = req.body;
-    if (typeof body === 'string') {
-      body = JSON.parse(body);
+    if (!body) {
+      // Parse raw stream if not auto-parsed
+      body = await new Promise((resolve) => {
+        let raw = '';
+        req.on('data', chunk => raw += chunk);
+        req.on('end', () => {
+          try { resolve(JSON.parse(raw || '{}')); } catch(e) { resolve({}); }
+        });
+      });
+    } else if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch(e) { body = {}; }
     }
+
     const success = await saveGoogleSheetConfig(body);
     if (success) {
-      res.status(200).json({ status: 'success', message: 'Đã lưu cấu hình vào Google Sheet [API]' });
+      res.statusCode = 200;
+      res.end(JSON.stringify({ status: 'success', message: 'Đã lưu cấu hình vào Google Sheet [API]' }));
     } else {
-      res.status(500).json({ status: 'error', message: 'Không thể ghi vào Google Sheet [API]' });
+      res.statusCode = 500;
+      res.end(JSON.stringify({ status: 'error', message: 'Không thể ghi vào Google Sheet [API]' }));
     }
   } catch (err) {
     console.error('Lỗi save-config API:', err.message);
-    res.status(500).json({ status: 'error', message: err.message });
+    res.statusCode = 500;
+    res.end(JSON.stringify({ status: 'error', message: err.message }));
   }
 };

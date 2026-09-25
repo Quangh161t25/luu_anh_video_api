@@ -1,4 +1,4 @@
-﻿const { getGoogleSheetConfig } = require('./_sheets');
+const { getGoogleSheetConfig } = require('./_sheets');
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -10,15 +10,19 @@ module.exports = async (req, res) => {
   );
 
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
+    res.statusCode = 200;
+    res.end();
     return;
   }
 
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
   try {
     const config = await getGoogleSheetConfig();
-    res.status(200).json({ status: 'success', data: config });
+    res.statusCode = 200;
+    res.end(JSON.stringify({ status: 'success', data: config }));
   } catch (err) {
     console.error('Lỗi get-config API:', err.message);
-    res.status(500).json({ status: 'error', message: err.message });
+    res.statusCode = 500;
+    res.end(JSON.stringify({ status: 'error', message: err.message }));
   }
 };
