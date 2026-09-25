@@ -941,9 +941,12 @@
             <span class="platform-name">
               <i data-lucide="sparkles" style="width: 16px; height: 16px; color: #a855f7;"></i> Cloudinary
             </span>
-            <span class="tag tag-perm">Vĩnh Viễn</span>
+            <div style="display: flex; gap: 4px;">
+              <span class="tag tag-perm" style="background: rgba(168, 85, 247, 0.25); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.4);">📱 Khuyên dùng Mobile</span>
+              <span class="tag tag-perm">Vĩnh Viễn</span>
+            </div>
           </div>
-          <div class="platform-desc">Lưu Ảnh, Video & PDF vĩnh viễn, CDN siêu tốc (Free 25GB)</div>
+          <div class="platform-desc">Tải trực tiếp 100% trên Điện thoại & PC, không lỗi CORS (Ảnh, Video &lt;100MB, PDF)</div>
         </div>
 
         <!-- 2. Catbox.moe (Vĩnh Viễn) -->
@@ -952,9 +955,12 @@
             <span class="platform-name">
               <i data-lucide="cat" style="width: 16px; height: 16px; color: #f43f5e;"></i> Catbox.moe
             </span>
-            <span class="tag tag-perm">Vĩnh Viễn</span>
+            <div style="display: flex; gap: 4px;">
+              <span class="tag tag-temp" style="background: rgba(244, 63, 94, 0.15); color: #fda4af;">🖥️ Cần Server PC</span>
+              <span class="tag tag-perm">Vĩnh Viễn</span>
+            </div>
           </div>
-          <div class="platform-desc">Lưu vĩnh viễn không giới hạn thời gian (Tối đa 200MB/file)</div>
+          <div class="platform-desc">Lưu vĩnh viễn (Catbox chặn CORS từ điện thoại, cần chạy qua Server PC)</div>
         </div>
 
         <!-- 3. Litterbox (Tạm Thời) -->
@@ -963,9 +969,12 @@
             <span class="platform-name">
               <i data-lucide="clock" style="width: 16px; height: 16px; color: #facc15;"></i> Litterbox
             </span>
-            <span class="tag tag-temp">1 - 3 Ngày</span>
+            <div style="display: flex; gap: 4px;">
+              <span class="tag tag-temp" style="background: rgba(250, 204, 21, 0.15); color: #fef08a;">🖥️ Cần Server PC</span>
+              <span class="tag tag-temp">1 - 3 Ngày</span>
+            </div>
           </div>
-          <div class="platform-desc">Chia sẻ tạm thời tự hủy sau 1h, 24h, 72h (Tối đa 1GB/file)</div>
+          <div class="platform-desc">Tự hủy sau 1h, 24h, 72h (Litterbox chặn CORS từ điện thoại, cần chạy qua Server PC)</div>
         </div>
 
         <!-- 4. Telegram Cloud API -->
@@ -974,9 +983,12 @@
             <span class="platform-name">
               <i data-lucide="send" style="width: 16px; height: 16px; color: #38bdf8;"></i> Telegram API
             </span>
-            <span class="tag tag-perm">Vĩnh Viễn</span>
+            <div style="display: flex; gap: 4px;">
+              <span class="tag tag-perm" style="background: rgba(56, 189, 248, 0.2); color: #7dd3fc;">📱 Hỗ Trợ Mobile (&lt;50MB)</span>
+              <span class="tag tag-perm">Vĩnh Viễn</span>
+            </div>
           </div>
-          <div class="platform-desc">Không giới hạn dung lượng tổng, lưu qua Bot API</div>
+          <div class="platform-desc">Tải trực tiếp qua Telegram Bot (Hỗ trợ tệp dưới 50MB, không giới hạn số lượng)</div>
         </div>
 
         <!-- 5. DoodStream -->
@@ -985,7 +997,10 @@
             <span class="platform-name">
               <i data-lucide="play-circle" style="width: 16px; height: 16px; color: #eab308;"></i> DoodStream
             </span>
-            <span class="tag tag-perm">Vĩnh Viễn</span>
+            <div style="display: flex; gap: 4px;">
+              <span class="tag tag-perm" style="background: rgba(234, 179, 8, 0.2); color: #fde047;">🎬 Chuyên Video Lớn</span>
+              <span class="tag tag-perm">Vĩnh Viễn</span>
+            </div>
           </div>
           <div class="platform-desc">Chuyên lưu trữ phim & video dài, không giới hạn dung lượng</div>
         </div>
@@ -1481,7 +1496,7 @@
         } else if (item.status === 'success') {
           statusHtml = `<span class="status-badge status-success"><i data-lucide="check" style="width: 12px; height: 12px;"></i> Thành công</span>`;
         } else if (item.status === 'error') {
-          statusHtml = `<span class="status-badge status-error" title="${item.error || 'Lỗi'}"><i data-lucide="alert-circle" style="width: 12px; height: 12px;"></i> Lỗi</span>`;
+          statusHtml = `<span class="status-badge status-error"><i data-lucide="alert-circle" style="width: 12px; height: 12px;"></i> Bị lỗi</span>`;
         }
 
         const itemElem = document.createElement('div');
@@ -1513,11 +1528,49 @@
           <div class="item-progress-bar" id="item-prog-bar-${item.id}" style="${item.status === 'uploading' ? 'display: block;' : 'display: none;'}">
             <div class="item-progress-fill" id="item-prog-fill-${item.id}" style="width: ${item.progress}%;"></div>
           </div>
+          ${item.status === 'error' ? `
+            <div class="item-error-banner" style="margin-top: 8px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #fca5a5;">
+              <div style="display: flex; align-items: flex-start; gap: 8px;">
+                <i data-lucide="alert-triangle" style="width: 16px; height: 16px; color: #ef4444; flex-shrink: 0; margin-top: 2px;"></i>
+                <div style="flex: 1; line-height: 1.45;">
+                  <div style="color: #f87171; font-weight: 700; margin-bottom: 2px;">🛑 Lỗi: ${item.error || 'Lỗi tải lên'}</div>
+                  ${item.hint ? `<div style="color: #fde047; font-size: 11px; margin-top: 4px; background: rgba(234, 179, 8, 0.1); padding: 4px 8px; border-radius: 4px; border: 1px dashed rgba(234, 179, 8, 0.3);">💡 <strong>Hướng dẫn khắc phục:</strong> ${item.hint}</div>` : ''}
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                <button type="button" onclick="retrySingleFile('${item.id}')" style="background: rgba(239, 68, 68, 0.25); border: 1px solid rgba(239, 68, 68, 0.5); color: white; padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                  <i data-lucide="rotate-cw" style="width: 12px; height: 12px;"></i> Thử lại tệp này
+                </button>
+                ${selectedPlatform !== 'cloudinary' ? `
+                  <button type="button" onclick="switchToCloudinaryAndRetry('${item.id}')" style="background: rgba(168, 85, 247, 0.25); border: 1px solid rgba(168, 85, 247, 0.5); color: #e9d5ff; padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                    <i data-lucide="sparkles" style="width: 12px; height: 12px; color: #c084fc;"></i> Đổi sang Cloudinary (Tối ưu cho Điện thoại)
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+          ` : ''}
         `;
         list.appendChild(itemElem);
       });
 
       lucide.createIcons();
+    }
+
+    function retrySingleFile(id) {
+      const item = fileQueue.find(f => f.id === id);
+      if (item) {
+        item.status = 'waiting';
+        item.progress = 0;
+        item.error = '';
+        item.hint = '';
+        renderQueue();
+        executeBatchUpload();
+      }
+    }
+
+    function switchToCloudinaryAndRetry(id) {
+      selectPlatform('cloudinary');
+      retrySingleFile(id);
     }
 
     function removeQueueItem(id) {
@@ -1587,6 +1640,8 @@
 
         item.status = 'uploading';
         item.progress = 0;
+        item.error = '';
+        item.hint = '';
         renderQueue();
 
         const overallPercent = Math.round(((i) / total) * 100);
@@ -1621,12 +1676,14 @@
             // Ghi ngay vào Google Sheet DATA
             await saveToGoogleSheet(item.file, url, platformName, i + 1, total);
           } else {
-            throw new Error("Không nhận được link phản hồi từ API!");
+            throw new Error("Không nhận được link phản hồi từ máy chủ!");
           }
         } catch (err) {
           console.error(`Lỗi tải tệp ${item.name}:`, err);
           item.status = 'error';
-          item.error = err.message || 'Lỗi tải lên';
+          item.error = err.message || 'Lỗi tải lên không xác định';
+          item.hint = err.hint || (selectedPlatform === 'catbox' || selectedPlatform === 'litterbox' ? 'Catbox/Litterbox chặn tải trực tiếp từ trình duyệt điện thoại (Lỗi CORS). Hãy chuyển sang tab Cloudinary hoặc Telegram để tải trực tiếp trên điện thoại!' : 'Kiểm tra lại kết nối mạng và cấu hình API.');
+          showToast(`❌ ${item.name}: ${item.error}`);
         }
 
         renderQueue();
@@ -1836,10 +1893,18 @@
     function uploadCloudinary(file, onProgress) {
       return new Promise((resolve, reject) => {
         const cloudName = document.getElementById('cld_name')?.value?.trim() || 'qeld2qwe';
-        const preset = document.getElementById('cld_preset')?.value?.trim();
+        const preset = document.getElementById('cld_preset')?.value?.trim() || 'video_preset';
 
-        if (!cloudName || !preset) {
-          reject(new Error("Vui lòng nhập Upload Preset trong cấu hình Cloudinary!"));
+        if (!cloudName) {
+          const err = new Error("Chưa nhập Cloud Name của Cloudinary!");
+          err.hint = "Vui lòng nhập Cloud Name (mặc định: qeld2qwe) trong mục Cấu hình Cloudinary.";
+          reject(err);
+          return;
+        }
+        if (!preset) {
+          const err = new Error("Chưa nhập Upload Preset của Cloudinary!");
+          err.hint = "Vui lòng nhập Upload Preset 'video_preset' trong mục Cấu hình Cloudinary.";
+          reject(err);
           return;
         }
 
@@ -1857,14 +1922,39 @@
         }
 
         xhr.onload = () => {
-          if (xhr.status === 200) {
+          try {
             const data = JSON.parse(xhr.responseText);
-            resolve(data.secure_url || data.url);
-          } else {
-            reject(new Error("Lỗi Cloudinary: " + xhr.responseText));
+            if (xhr.status === 200 && (data.secure_url || data.url)) {
+              resolve(data.secure_url || data.url);
+            } else {
+              const rawMsg = data.error?.message || xhr.responseText;
+              let friendlyMsg = "Lỗi Cloudinary: " + rawMsg;
+              let hint = "Kiểm tra lại Cloud Name và Upload Preset.";
+              if (rawMsg.includes("File size too large") || rawMsg.includes("max allowed")) {
+                friendlyMsg = `Tệp dung lượng ${formatSize(file.size)} vượt quá giới hạn 100MB của tài khoản Cloudinary miễn phí.`;
+                hint = "Hãy chọn tab DoodStream để tải video dung lượng lớn không giới hạn.";
+              } else if (rawMsg.includes("Upload preset must be specified") || rawMsg.includes("preset")) {
+                friendlyMsg = `Upload Preset '${preset}' chưa đúng hoặc chưa kích hoạt chế độ Unsigned trên Cloudinary.`;
+                hint = "Hãy vào Cloudinary Settings -> Upload -> Add Upload Preset -> Chọn Signing Mode là 'Unsigned' và đặt tên là 'video_preset'.";
+              } else if (rawMsg.includes("Invalid cloud_name")) {
+                friendlyMsg = `Cloud Name '${cloudName}' không tồn tại.`;
+                hint = "Kiểm tra lại Cloud Name chính xác trong tài khoản Cloudinary của bạn.";
+              }
+              const err = new Error(friendlyMsg);
+              err.hint = hint;
+              reject(err);
+            }
+          } catch (parseErr) {
+            const err = new Error("Lỗi phản hồi từ Cloudinary: " + (xhr.statusText || xhr.status));
+            err.hint = "Kiểm tra lại kết nối mạng hoặc thử lại sau.";
+            reject(err);
           }
         };
-        xhr.onerror = () => reject(new Error("Lỗi kết nối tới Cloudinary!"));
+        xhr.onerror = () => {
+          const err = new Error("Không thể kết nối tới Cloudinary (Lỗi mạng hoặc bị chặn)");
+          err.hint = "Kiểm tra kết nối mạng 3G/4G/Wifi trên điện thoại và thử lại.";
+          reject(err);
+        };
         xhr.send(formData);
       });
     }
@@ -1872,6 +1962,13 @@
     // 2. CATBOX.MOE UPLOAD (LƯU VĨNH VIỄN)
     function uploadCatbox(file, onProgress) {
       return new Promise((resolve, reject) => {
+        if (file.size > 200 * 1024 * 1024) {
+          const err = new Error(`Tệp dung lượng ${formatSize(file.size)} vượt quá giới hạn 200MB của Catbox.moe!`);
+          err.hint = "Hãy chuyển sang tab Cloudinary hoặc DoodStream để tải tệp lớn hơn.";
+          reject(err);
+          return;
+        }
+
         const userhash = document.getElementById('catbox_userhash')?.value?.trim() || '';
         const formData = new FormData();
         formData.append("reqtype", "fileupload");
@@ -1912,12 +2009,16 @@
             if (directXhr.status === 200 && directXhr.responseText.trim().startsWith("http")) {
               resolve(directXhr.responseText.trim());
             } else {
-              reject(new Error("Lỗi phản hồi từ Catbox: " + directXhr.responseText));
+              const err = new Error("Catbox phản hồi lỗi: " + directXhr.responseText);
+              err.hint = "Thử lại hoặc bấm 'Đổi sang Cloudinary' để tải ngay trên điện thoại.";
+              reject(err);
             }
           };
 
           directXhr.onerror = () => {
-            reject(new Error("Không thể kết nối trực tiếp Catbox (bảo mật CORS). Hãy mở file Chay_Server_Vinh_Vien.bat để tải Catbox 100%!"));
+            const err = new Error("Trình duyệt điện thoại bị chặn CORS khi gửi trực tiếp tới Catbox.moe");
+            err.hint = "Catbox chặn gửi file trực tiếp từ trình duyệt điện thoại. Bạn hãy bấm nút 'Đổi sang Cloudinary' ở dưới để tải trực tiếp trên điện thoại 100% thành công!";
+            reject(err);
           };
 
           directXhr.send(formData);
@@ -1931,7 +2032,9 @@
     function uploadLitterbox(file, onProgress) {
       return new Promise((resolve, reject) => {
         if (file.size > 1024 * 1024 * 1024) {
-          reject(new Error("Litterbox chỉ hỗ trợ file tối đa 1GB!"));
+          const err = new Error("Litterbox chỉ hỗ trợ tệp tối đa 1GB!");
+          err.hint = "Vui lòng chọn tệp nhỏ hơn 1GB.";
+          reject(err);
           return;
         }
 
@@ -1941,7 +2044,6 @@
         formData.append("time", time);
         formData.append("fileToUpload", file);
 
-        // Thử qua Local Server (Port 5000) trước
         const localXhr = new XMLHttpRequest();
         localXhr.open("POST", "http://localhost:5000/api/litterbox-upload", true);
         if (onProgress) {
@@ -1975,12 +2077,16 @@
             if (directXhr.status === 200 && directXhr.responseText.trim().startsWith("http")) {
               resolve(directXhr.responseText.trim());
             } else {
-              reject(new Error("Lỗi phản hồi từ Litterbox: " + directXhr.responseText));
+              const err = new Error("Litterbox phản hồi lỗi: " + directXhr.responseText);
+              err.hint = "Thử lại hoặc bấm 'Đổi sang Cloudinary' để tải ngay trên điện thoại.";
+              reject(err);
             }
           };
 
           directXhr.onerror = () => {
-            reject(new Error("Không thể kết nối trực tiếp Litterbox (bảo mật CORS). Hãy mở file Chay_Server_Vinh_Vien.bat để hỗ trợ 100%!"));
+            const err = new Error("Trình duyệt điện thoại bị chặn CORS khi gửi trực tiếp tới Litterbox");
+            err.hint = "Litterbox chặn gửi file trực tiếp từ trình duyệt điện thoại. Bạn hãy bấm nút 'Đổi sang Cloudinary' ở dưới để tải trực tiếp trên điện thoại 100% thành công!";
+            reject(err);
           };
 
           directXhr.send(formData);
@@ -1993,11 +2099,21 @@
     // 4. TELEGRAM BOT UPLOAD (HỖ TRỢ ẢNH, VIDEO, PDF & TÀI LIỆU)
     function uploadTelegram(file, onProgress) {
       return new Promise((resolve, reject) => {
+        // Giới hạn Telegram Bot API là 50MB
+        if (file.size > 50 * 1024 * 1024) {
+          const err = new Error(`Tệp dung lượng ${formatSize(file.size)} vượt quá giới hạn 50MB của Telegram Bot API!`);
+          err.hint = "Telegram Bot API không cho phép tải tệp > 50MB. Bạn hãy bấm 'Đổi sang Cloudinary' (hỗ trợ đến 100MB) hoặc 'DoodStream' để tải video lớn.";
+          reject(err);
+          return;
+        }
+
         const token = document.getElementById('tg_token')?.value?.trim();
         const chatId = document.getElementById('tg_chatid')?.value?.trim();
 
         if (!token || !chatId) {
-          reject(new Error("Vui lòng nhập Bot Token và Chat ID trong cấu hình Telegram!"));
+          const err = new Error("Vui lòng nhập Bot Token và Chat ID trong cấu hình Telegram!");
+          err.hint = "Điền Telegram Bot Token và Chat ID ở mục Cấu hình Telegram.";
+          reject(err);
           return;
         }
 
@@ -2027,9 +2143,9 @@
         }
 
         xhr.onload = async () => {
-          if (xhr.status === 200) {
+          try {
             const res = JSON.parse(xhr.responseText);
-            if (res.ok && res.result) {
+            if (xhr.status === 200 && res.ok && res.result) {
               let fileId = null;
               if (res.result.video) fileId = res.result.video.file_id;
               else if (res.result.photo && res.result.photo.length > 0) fileId = res.result.photo[res.result.photo.length - 1].file_id;
@@ -2039,7 +2155,7 @@
                 try {
                   const fileInfoRes = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`);
                   const fileInfo = await fileInfoRes.json();
-                  if (fileInfo.ok) {
+                  if (fileInfo.ok && fileInfo.result?.file_path) {
                     const directUrl = `https://api.telegram.org/file/bot${token}/${fileInfo.result.file_path}`;
                     resolve(directUrl);
                     return;
@@ -2048,13 +2164,34 @@
               }
               resolve(`https://t.me/${chatId.replace('@','')}/${res.result.message_id}`);
             } else {
-              reject(new Error("Telegram phản hồi không hợp lệ: " + xhr.responseText));
+              const desc = res.description || xhr.responseText;
+              let friendlyMsg = "Lỗi Telegram: " + desc;
+              let hint = "Kiểm tra lại Token Bot và Chat ID.";
+              if (desc.includes("chat not found") || desc.includes("Forbidden")) {
+                friendlyMsg = "Không tìm thấy Chat ID hoặc Bot chưa được thêm quyền nhắn tin vào Nhóm/Kênh Telegram.";
+                hint = "Hãy thêm Bot vào nhóm/kênh Telegram và cấp quyền Admin, hoặc kiểm tra lại Chat ID.";
+              } else if (desc.includes("Unauthorized")) {
+                friendlyMsg = "Bot Token Telegram không đúng hoặc đã bị thu hồi.";
+                hint = "Vào @BotFather trên Telegram để lấy lại Token chính xác.";
+              } else if (desc.includes("file is too large") || desc.includes("too big")) {
+                friendlyMsg = `Tệp dung lượng ${formatSize(file.size)} vượt quá giới hạn 50MB của Telegram Bot!`;
+                hint = "Hãy chọn tab Cloudinary hoặc DoodStream để tải video lớn.";
+              }
+              const err = new Error(friendlyMsg);
+              err.hint = hint;
+              reject(err);
             }
-          } else {
-            reject(new Error("Lỗi Telegram: " + xhr.responseText));
+          } catch (parseErr) {
+            const err = new Error("Lỗi phản hồi từ Telegram: " + xhr.statusText);
+            err.hint = "Kiểm tra lại kết nối mạng trên điện thoại.";
+            reject(err);
           }
         };
-        xhr.onerror = () => reject(new Error("Lỗi kết nối tới Telegram API!"));
+        xhr.onerror = () => {
+          const err = new Error("Không thể kết nối tới Telegram API (Lỗi mạng hoặc bị chặn)");
+          err.hint = "Kiểm tra lại kết nối mạng 3G/4G/Wifi trên điện thoại.";
+          reject(err);
+        };
         xhr.send(formData);
       });
     }
@@ -2063,13 +2200,17 @@
     async function uploadDoodstream(file, onProgress) {
       const apiKey = document.getElementById('dood_key')?.value?.trim();
       if (!apiKey) {
-        throw new Error("Vui lòng nhập DoodStream API Key!");
+        const err = new Error("Chưa nhập DoodStream API Key!");
+        err.hint = "Vui lòng nhập API Key trong phần Cấu hình DoodStream.";
+        throw err;
       }
 
       const serverRes = await fetch(`https://doodapi.com/api/upload/server?key=${apiKey}`);
       const serverData = await serverRes.json();
       if (serverData.status !== 200 || !serverData.result) {
-        throw new Error("Không thể lấy server DoodStream: " + serverData.msg);
+        const err = new Error("Không thể kết nối máy chủ DoodStream: " + (serverData.msg || ''));
+        err.hint = "Kiểm tra lại DoodStream API Key chính xác.";
+        throw err;
       }
 
       const uploadUrl = serverData.result;
@@ -2088,18 +2229,28 @@
 
         xhr.onload = () => {
           if (xhr.status === 200) {
-            const data = JSON.parse(xhr.responseText);
-            if (data.result && data.result.length > 0) {
-              const video = data.result[0];
-              resolve(video.download_url || video.protected_embed);
-            } else {
-              reject(new Error("Lỗi Doodstream: " + xhr.responseText));
+            try {
+              const data = JSON.parse(xhr.responseText);
+              if (data.result && data.result.length > 0) {
+                const video = data.result[0];
+                resolve(video.download_url || video.protected_embed);
+              } else {
+                const err = new Error("Lỗi Doodstream: " + xhr.responseText);
+                err.hint = "Thử lại hoặc kiểm tra định dạng video.";
+                reject(err);
+              }
+            } catch(e) {
+              reject(new Error("Lỗi phản hồi từ DoodStream: " + xhr.responseText));
             }
           } else {
             reject(new Error("Lỗi server Doodstream: " + xhr.statusText));
           }
         };
-        xhr.onerror = () => reject(new Error("Lỗi kết nối tới DoodStream!"));
+        xhr.onerror = () => {
+          const err = new Error("Lỗi kết nối tới DoodStream (Mạng hoặc bị chặn)");
+          err.hint = "Kiểm tra kết nối mạng trên điện thoại.";
+          reject(err);
+        };
         xhr.send(formData);
       });
     }
@@ -2112,7 +2263,9 @@
         const bucket = 'videos';
 
         if (!sbUrl || !sbKey) {
-          reject(new Error("Vui lòng nhập Project URL và Anon Key của Supabase!"));
+          const err = new Error("Chưa nhập Project URL và Anon Key của Supabase!");
+          err.hint = "Vui lòng nhập Supabase Project URL và Anon Key trong mục Cấu hình Supabase.";
+          reject(err);
           return;
         }
 
@@ -2135,10 +2288,16 @@
             const publicUrl = `${sbUrl}/storage/v1/object/public/${bucket}/${fileName}`;
             resolve(publicUrl);
           } else {
-            reject(new Error("Lỗi Supabase: " + xhr.responseText));
+            const err = new Error("Lỗi Supabase Storage: " + xhr.responseText);
+            err.hint = "Kiểm tra quyền ghi (RLS policy) của bucket 'videos' trên Supabase.";
+            reject(err);
           }
         };
-        xhr.onerror = () => reject(new Error("Lỗi kết nối tới Supabase!"));
+        xhr.onerror = () => {
+          const err = new Error("Lỗi kết nối tới Supabase Storage");
+          err.hint = "Kiểm tra Supabase URL và Anon Key.";
+          reject(err);
+        };
         xhr.send(file);
       });
     }
