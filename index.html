@@ -1026,6 +1026,20 @@
           </div>
           <div class="platform-desc">Lưu file dung lượng lớn mọi định dạng không cần tài khoản</div>
         </div>
+
+        <!-- 8. TmpFiles Cloud (Lên tới 5GB) -->
+        <div id="card-tmpfiles" class="platform-card" onclick="selectPlatform('tmpfiles')">
+          <div class="platform-header">
+            <span class="platform-name">
+              <i data-lucide="file-up" style="width: 16px; height: 16px; color: #38bdf8;"></i> TmpFiles Cloud
+            </span>
+            <div style="display: flex; gap: 4px;">
+              <span class="tag tag-perm" style="background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4);">⚡ Hỗ Trợ 5GB (500MB+)</span>
+              <span class="tag tag-temp">Tạm Thời</span>
+            </div>
+          </div>
+          <div class="platform-desc">Tải tệp lớn &lt; 5GB (500MB, 1GB, 2GB...) trực tiếp từ điện thoại không cần tài khoản</div>
+        </div>
       </div>
 
       <!-- CONFIGURATION FORMS -->
@@ -1113,6 +1127,14 @@
       <div id="config-gofile" class="config-box">
         <p style="font-size: 13px; color: #38bdf8;">
           ✨ <strong>GoFile Cloud:</strong> Tự động 100%, hỗ trợ mọi loại tệp Ảnh, Video, PDF, ZIP dung lượng lớn.
+        </p>
+      </div>
+
+      <!-- 8. Config TmpFiles -->
+      <div id="config-tmpfiles" class="config-box">
+        <h4><i data-lucide="file-up" style="width: 14px; height: 14px; color: #38bdf8;"></i> TmpFiles Cloud (Hỗ trợ tệp lớn đến 5GB / 5000MB):</h4>
+        <p style="font-size: 12px; color: #34d399; margin-top: 6px;">
+          ✅ <strong>Tải tệp lớn không cần tài khoản:</strong> Hỗ trợ tải các tệp video/file 500MB, 1GB, 2GB lên đến 5GB trực tiếp 100% từ điện thoại và máy tính, tốc độ cực nhanh và tự động lưu vào Google Sheet <code>DATA</code>!
         </p>
       </div>
 
@@ -1626,6 +1648,7 @@
         case 'doodstream': platformName = "DoodStream (Vĩnh Viễn)"; break;
         case 'supabase': platformName = "Supabase Storage (Vĩnh Viễn)"; break;
         case 'gofile': platformName = "GoFile Cloud (10-30 Ngày)"; break;
+        case 'tmpfiles': platformName = "TmpFiles Cloud (Lên Đến 5GB)"; break;
       }
 
       let successCount = 0;
@@ -1665,6 +1688,7 @@
             case 'doodstream': url = await uploadDoodstream(item.file, onProg); break;
             case 'supabase': url = await uploadSupabase(item.file, onProg); break;
             case 'gofile': url = await uploadGoFile(item.file, onProg); break;
+            case 'tmpfiles': url = await uploadTmpFiles(item.file, onProg); break;
           }
 
           if (url) {
@@ -2337,6 +2361,58 @@
           }
         };
         xhr.onerror = () => reject(new Error("Lỗi kết nối tới GoFile!"));
+        xhr.send(formData);
+      });
+    }
+
+    // 8. TMPFILES UPLOAD (HỖ TRỢ FILE LỚN ĐẾN 5GB / 5000MB)
+    function uploadTmpFiles(file, onProgress) {
+      return new Promise((resolve, reject) => {
+        if (file.size > 5 * 1024 * 1024 * 1024) {
+          const err = new Error(`Tệp dung lượng ${formatSize(file.size)} vượt quá giới hạn 5GB của TmpFiles!`);
+          err.hint = "Vui lòng chọn tệp nhỏ hơn 5GB.";
+          reject(err);
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "https://tmpfiles.org/api/v1/upload", true);
+        if (onProgress) {
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+          };
+        }
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const res = JSON.parse(xhr.responseText);
+              if (res.status === 'success' && res.data?.url) {
+                // Biến đổi link xem sang direct download/stream link
+                const directUrl = res.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+                resolve(directUrl);
+              } else {
+                const err = new Error("Lỗi phản hồi từ TmpFiles: " + xhr.responseText);
+                err.hint = "Thử lại hoặc kiểm tra định dạng tệp.";
+                reject(err);
+              }
+            } catch(e) {
+              reject(new Error("Lỗi phản hồi dữ liệu TmpFiles: " + xhr.responseText));
+            }
+          } else {
+            const err = new Error("Lỗi máy chủ TmpFiles: " + xhr.statusText);
+            err.hint = "Thử lại sau ít phút hoặc chọn GoFile / DoodStream.";
+            reject(err);
+          }
+        };
+        xhr.onerror = () => {
+          const err = new Error("Không thể kết nối tới TmpFiles (Lỗi mạng)");
+          err.hint = "Kiểm tra lại kết nối mạng trên điện thoại.";
+          reject(err);
+        };
         xhr.send(formData);
       });
     }
