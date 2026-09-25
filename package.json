@@ -2,7 +2,9 @@
   "name": "luu_anh_video_api",
   "version": "1.0.0",
   "private": true,
+  "main": "index.js",
   "scripts": {
-    "build": "echo 'Static build ready'"
+    "start": "node server.js",
+    "build": "echo 'Build complete'"
   }
 }
