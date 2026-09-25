@@ -2350,41 +2350,44 @@
       formData.append("api_key", apiKey);
       formData.append("file", file);
 
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", uploadUrl, true);
-        if (onProgress) {
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
-          };
+      // Tiến độ mượt mà khi gửi qua Fetch (tránh kích hoạt OPTIONS CORS của XHR)
+      let currentProgress = 5;
+      if (onProgress) onProgress(currentProgress);
+      const progTimer = setInterval(() => {
+        if (currentProgress < 90) {
+          currentProgress += Math.max(1, Math.floor((90 - currentProgress) / 10));
+          if (onProgress) onProgress(currentProgress);
+        }
+      }, 500);
+
+      try {
+        const res = await fetch(uploadUrl, {
+          method: "POST",
+          body: formData
+        });
+
+        clearInterval(progTimer);
+
+        if (!res.ok) {
+          throw new Error(`Máy chủ DoodStream phản hồi HTTP ${res.status}`);
         }
 
-        xhr.onload = () => {
-          if (xhr.status === 200) {
-            try {
-              const data = JSON.parse(xhr.responseText);
-              if (data.result && data.result.length > 0) {
-                const video = data.result[0];
-                resolve(video.download_url || video.protected_embed);
-              } else {
-                const err = new Error("Lỗi Doodstream: " + (data.msg || xhr.responseText));
-                err.hint = "Kiểm tra định dạng video hoặc chuyển sang TmpFiles Cloud.";
-                reject(err);
-              }
-            } catch(e) {
-              reject(new Error("Lỗi phản hồi từ DoodStream: " + xhr.responseText));
-            }
-          } else {
-            reject(new Error("Lỗi máy chủ Doodstream: " + xhr.statusText));
-          }
-        };
-        xhr.onerror = () => {
-          const err = new Error("Lỗi kết nối tới máy chủ DoodStream CDN");
-          err.hint = "Kiểm tra mạng trên điện thoại hoặc bấm đổi sang TmpFiles Cloud.";
-          reject(err);
-        };
-        xhr.send(formData);
-      });
+        const data = await res.json();
+        if (data.result && data.result.length > 0) {
+          const video = data.result[0];
+          if (onProgress) onProgress(100);
+          return video.download_url || video.protected_embed;
+        } else {
+          const err = new Error("Lỗi Doodstream: " + (data.msg || JSON.stringify(data)));
+          err.hint = "Kiểm tra định dạng video MP4/MKV hoặc chuyển sang TmpFiles Cloud.";
+          throw err;
+        }
+      } catch (uploadErr) {
+        clearInterval(progTimer);
+        const err = new Error("Lỗi tải lên DoodStream: " + uploadErr.message);
+        err.hint = "Nếu mạng chặn DoodStream, bạn hãy bấm chuyển sang '⚡ TmpFiles Cloud' (Hỗ trợ 5GB) để tải lên ngay tức thì!";
+        throw err;
+      }
     }
 
     // 6. SUPABASE STORAGE UPLOAD (HỖ TRỢ MỌI LOẠI TỆP)
