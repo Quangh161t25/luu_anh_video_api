@@ -359,6 +359,82 @@
       box-shadow: 0 2px 8px rgba(91, 70, 229, 0.4);
     }
 
+    /* Media Grouped Container & Date Headers */
+    .media-grouped-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .date-group-section {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .date-group-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: rgba(18, 25, 44, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .date-group-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #f1f5f9;
+      letter-spacing: -0.2px;
+    }
+
+    .date-group-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(99, 102, 241, 0.18);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      color: #a5b4fc;
+    }
+
+    .date-group-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .date-group-select-btn {
+      background: transparent;
+      border: 1px solid var(--input-border);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .date-group-select-btn:hover {
+      background: rgba(99, 102, 241, 0.15);
+      color: #fff;
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+
     /* Media Grid Layout */
     .media-grid {
       display: grid;
@@ -1166,11 +1242,14 @@
         </div>
 
         <div class="view-toggle">
+          <button class="view-btn active" id="btnGroupDate" onclick="toggleGroupByDate()" title="Nhóm theo ngày (Bật/Tắt)">
+            <i data-lucide="calendar" style="width:15px;height:15px;"></i>
+          </button>
           <button class="view-btn active" id="btnGridView" onclick="setViewMode('grid')" title="Dạng lưới (Grid)">
-            <i data-lucide="layout-grid" style="width:16px;height:16px;"></i>
+            <i data-lucide="layout-grid" style="width:15px;height:15px;"></i>
           </button>
           <button class="view-btn" id="btnListView" onclick="setViewMode('list')" title="Dạng danh sách (List)">
-            <i data-lucide="list" style="width:16px;height:16px;"></i>
+            <i data-lucide="list" style="width:15px;height:15px;"></i>
           </button>
         </div>
       </div>
@@ -1617,53 +1696,131 @@
       renderMedia();
     }
 
-    // View Mode Toggle
+    let isGroupByDate = true; // Bật mặc định theo yêu cầu của user
+
+    function toggleGroupByDate() {
+      isGroupByDate = !isGroupByDate;
+      const btn = document.getElementById('btnGroupDate');
+      if (btn) btn.classList.toggle('active', isGroupByDate);
+      renderMedia();
+      showToast(isGroupByDate ? '📅 Đã bật nhóm theo ngày' : '📋 Đã tắt nhóm theo ngày');
+    }
+
+    // Chuyển ngày dạng DD/MM/YYYY hoặc chuỗi thời gian thành Timestamp để sắp xếp chính xác
+    function parseDateToTimestamp(dateStr, rawId) {
+      if (!dateStr) return parseInt(rawId) || 0;
+      const match = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+      if (match) {
+        const day = parseInt(match[1], 10);
+        const month = parseInt(match[2], 10) - 1;
+        const year = parseInt(match[3], 10);
+        return new Date(year, month, day).getTime();
+      }
+      const t = Date.parse(dateStr);
+      return isNaN(t) ? (parseInt(rawId) || 0) : t;
+    }
+
+    // Chuẩn hóa định dạng ngày hiển thị (DD/MM/YYYY)
+    function normalizeDateKey(dateStr) {
+      if (!dateStr || dateStr.trim() === '') return 'Khác (Chưa rõ ngày)';
+      const match = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+      if (match) {
+        const day = match[1].padStart(2, '0');
+        const month = match[2].padStart(2, '0');
+        const year = match[3];
+        return `${day}/${month}/${year}`;
+      }
+      return dateStr.trim();
+    }
+
+    // Tiêu đề nhóm ngày thông minh (Hôm nay, Hôm qua, Ngày...)
+    function formatGroupDateHeading(dateKey) {
+      if (!dateKey || dateKey.includes('Chưa rõ')) return '📁 Các tệp tin khác';
+      
+      const today = new Date();
+      const todayStr = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+      
+      const yesterday = new Date(Date.now() - 86400000);
+      const yesterdayStr = `${String(yesterday.getDate()).padStart(2, '0')}/${String(yesterday.getMonth() + 1).padStart(2, '0')}/${yesterday.getFullYear()}`;
+
+      if (dateKey === todayStr) {
+        return `Hôm nay • ${dateKey}`;
+      } else if (dateKey === yesterdayStr) {
+        return `Hôm qua • ${dateKey}`;
+      }
+      return `Ngày ${dateKey}`;
+    }
+
+    // Toggle chọn tất cả file trong 1 ngày cụ thể
+    function toggleSelectGroup(dateKey) {
+      const groupItems = allMediaItems.filter(i => normalizeDateKey(i.date) === dateKey);
+      const allSelected = groupItems.every(i => selectedIds.has(i.id));
+
+      groupItems.forEach(i => {
+        if (allSelected) {
+          selectedIds.delete(i.id);
+        } else {
+          selectedIds.add(i.id);
+        }
+      });
+
+      renderMedia();
+      updateBatchToolbar();
+    }
+
+    // View Mode Toggle (Grid / List)
     function setViewMode(mode) {
       currentView = mode;
       document.getElementById('btnGridView').classList.toggle('active', mode === 'grid');
       document.getElementById('btnListView').classList.toggle('active', mode === 'list');
-      
-      const container = document.getElementById('mediaContainer');
-      if (mode === 'grid') {
-        container.className = 'media-grid';
-      } else {
-        container.className = 'media-list';
-      }
       renderMedia();
     }
 
-    // Render Media Items
+    // Render Media Items với tính năng Nhóm Theo Ngày
     function renderMedia() {
       const container = document.getElementById('mediaContainer');
       let items = [...allMediaItems];
 
-      // Apply Filter
+      // 1. Áp dụng bộ lọc Tabs (Ảnh, Video, Doc, All)
       if (currentFilter !== 'all') {
         items = items.filter(i => i.type === currentFilter);
       }
 
-      // Apply Search
+      // 2. Áp dụng tìm kiếm
       if (currentSearch) {
         items = items.filter(i => 
           i.name.toLowerCase().includes(currentSearch) ||
           i.ext.toLowerCase().includes(currentSearch) ||
           i.note.toLowerCase().includes(currentSearch) ||
-          i.source.name.toLowerCase().includes(currentSearch)
+          i.source.name.toLowerCase().includes(currentSearch) ||
+          i.date.toLowerCase().includes(currentSearch)
         );
       }
 
-      // Apply Sort
+      // 3. Áp dụng sắp xếp
       if (currentSort === 'newest') {
-        items.sort((a, b) => (b.id > a.id ? 1 : -1));
+        items.sort((a, b) => {
+          const tA = parseDateToTimestamp(a.date, a.id);
+          const tB = parseDateToTimestamp(b.date, b.id);
+          if (tB !== tA) return tB - tA;
+          return (b.id > a.id ? 1 : -1);
+        });
       } else if (currentSort === 'oldest') {
-        items.sort((a, b) => (a.id > b.id ? 1 : -1));
+        items.sort((a, b) => {
+          const tA = parseDateToTimestamp(a.date, a.id);
+          const tB = parseDateToTimestamp(b.date, b.id);
+          if (tA !== tB) return tA - tB;
+          return (a.id > b.id ? 1 : -1);
+        });
       } else if (currentSort === 'name_asc') {
         items.sort((a, b) => a.name.localeCompare(b.name));
       } else if (currentSort === 'name_desc') {
         items.sort((a, b) => b.name.localeCompare(a.name));
       }
 
+      // Kiểm tra trống
       if (items.length === 0) {
+        container.className = 'media-grid';
         container.innerHTML = `
           <div class="empty-state">
             <div class="empty-icon">
@@ -1681,10 +1838,59 @@
         return;
       }
 
-      if (currentView === 'grid') {
-        container.innerHTML = items.map(item => renderGridCard(item)).join('');
+      // 4. Render dạng Nhóm Theo Ngày (isGroupByDate)
+      if (isGroupByDate) {
+        container.className = 'media-grouped-container';
+        
+        // Nhóm các phần tử theo ngày
+        const groups = new Map();
+        items.forEach(item => {
+          const dKey = normalizeDateKey(item.date);
+          if (!groups.has(dKey)) groups.set(dKey, []);
+          groups.get(dKey).push(item);
+        });
+
+        let html = '';
+        for (const [dKey, groupItems] of groups.entries()) {
+          const title = formatGroupDateHeading(dKey);
+          const allGroupSelected = groupItems.every(i => selectedIds.has(i.id));
+          
+          let cardsHtml = '';
+          if (currentView === 'grid') {
+            cardsHtml = `<div class="media-grid">${groupItems.map(item => renderGridCard(item)).join('')}</div>`;
+          } else {
+            cardsHtml = `<div class="media-list">${groupItems.map(item => renderListItem(item)).join('')}</div>`;
+          }
+
+          html += `
+            <div class="date-group-section">
+              <div class="date-group-header">
+                <div class="date-group-title">
+                  <i data-lucide="calendar" style="width:16px;height:16px;color:#818cf8;"></i>
+                  <span>${title}</span>
+                  <span class="date-group-badge">${groupItems.length} tệp</span>
+                </div>
+                <div class="date-group-actions">
+                  <button class="date-group-select-btn" onclick="toggleSelectGroup('${dKey}')">
+                    <i data-lucide="${allGroupSelected ? 'check-square' : 'square'}" style="width:13px;height:13px;color:${allGroupSelected ? '#34d399' : 'currentColor'};"></i>
+                    <span>${allGroupSelected ? 'Bỏ chọn ngày này' : 'Chọn tất cả ngày này'}</span>
+                  </button>
+                </div>
+              </div>
+              ${cardsHtml}
+            </div>
+          `;
+        }
+        container.innerHTML = html;
       } else {
-        container.innerHTML = items.map(item => renderListItem(item)).join('');
+        // Render dạng phẳng liên tục không nhóm
+        if (currentView === 'grid') {
+          container.className = 'media-grid';
+          container.innerHTML = items.map(item => renderGridCard(item)).join('');
+        } else {
+          container.className = 'media-list';
+          container.innerHTML = items.map(item => renderListItem(item)).join('');
+        }
       }
 
       lucide.createIcons();
