@@ -6,20 +6,31 @@ const SPREADSHEET_ID = '1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik';
 const DATA_SHEET_NAME = 'DATA';
 const API_SHEET_NAME = 'API';
 
+const DEFAULT_SERVICE_ACCOUNT = {
+  client_email: 'ca-nhan@h161-508101.iam.gserviceaccount.com',
+  private_key: '-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC1XkzwY+oHzPmN\nYnJ+sMKxe5TRTp8Md0Jb+PFApojE72HcVnXj14zFxFocyCPX1+dtwXJGJ/sSCyAh\niV3OtLEpxRU5QJponFszl9X6vmdLzDbzQS7VQTqMPv0JB+lHEYMU2B37hcIfpfJO\n+l6EMprUA7NJtmeJpqmXKjsov6Rdt61sjyH/LKaYj0T2sLGazgZesp96sEOu83HM\nnl+KPk9xafPOlKaE34Bk6zl4D8lFUK3v7opndvt/7IOBQ/RdI7p0v+HeOORGUuZW\nkW3GH1vo6xY/uyrtmjD7+18w5vmAIRm24Satu0MJYz+j1JtqV4U5wwDkNelXBAWz\nhKkfl5yxAgMBAAECggEAA9pDk+Epc943qFhQoo6Oai77+ai8AeuoHBRJCqSm99j2\naRPol+0Im1xZBi69rSxzyO3wp5sajxbvqSq19Im70C10rpVH2mRE3y8Q321LPC3T\ntn3aWPMUY22Emjwh6U2uzULsex7roVi48ZLJrnD1Pz7vYGfYofDJfjGqVUqh2xA+\nOSiz/U2JFTmePtrhxQGwaS8PHWyyUd+aiHz7pBg+tNzX0L+rMirPsN6i/ph+QolS\n4YXubv94O/WL92helDjQuUyWbisYdkuLp2XxnB+5Oa/2fQY7+rhju4pcIm+zA+Wc\nGdSzvLtL5hY9vLrZ8e4n0E/saILqViHSkRFksV1PaQKBgQDmEDaYQxmBeQsDbRJN\nBLg5lNBCgEWWkW/GNcL9cT+IcmNSyiPAnk2jofQpvmbbBh1lYeCbOhE4HDotN8a8\nhc1uRLb4K17fofhGV/znXW9Y12NcwZTkL5u4kKwDy8Qfx3PfckeLxA1s/3oS01tF\nwrybv1aB3Vxain5axUps5v0x6QKBgQDJ0Ld9nqXGBrknORjF1uQ7vpp5wp4Haohy\nFVNNfMzjKGRzKl8d4TxPVrUpShYBQE+v1pCwahOXCefovff32mQHzg4oVeml3bQq\notLFVVcydb1L8RY1R+QLbiqRy6Pnv5h4pB82eWg1i7xKuZvxZ68v6iPpEz+8zx0F\nFJ9IGolPiQKBgBRF03nBV+sHzoejwdwVkWJJkbx6bydgc3gE3sTUiOOuKMBv3Yyo\npnDH4asYAxpDxK1dXZxwFnpaSmoXoySTqdGQrorZz4dnT2hrcna0zg4HFNNkn4ko\nBNHTtcSz3Plr6vMCr/lJ8mDrdkdYZo+UJGiZCLdy2SOFVrMK9Y75H9CZAoGBAJcl\njTc06VztTiA1H/uT3K1uLA2DF43gWL5wgEopbN24M7sZAdHEDcIx405AIUjgnI3J\n+eVWHMPi9GAYXq2vT3mU9n95EJtb9wJznb2TE9JD4fkNX5+Z7w4sfQ9iX6hCk3PP\nH11SAh0QQX4JkuRyzf7pselutC65Qze54S1ESpBZAoGACkqjFmmF9I9jLZfJdWJM\nhOdPNHJD8NcM7ixbO9FBMw6S7PeUE//IuKQQcnxm9FsxCFVo2Q16+XKYLryZ/QxD\ncRUVkq/nAg4IB78jDp5Yc3n5VXAr10zWHWNFwVbdcZAs3BT9Q4WacASPdyowQPx0\nJYdnFqf9hx1XKT04zZ49M7w=\n-----END PRIVATE KEY-----\n'
+};
+
 async function getGoogleAccessToken() {
   try {
     let creds = null;
     const credPath = path.join(process.cwd(), 'service_account.json');
     if (fs.existsSync(credPath)) {
-      creds = JSON.parse(fs.readFileSync(credPath, 'utf8'));
+      try {
+        creds = JSON.parse(fs.readFileSync(credPath, 'utf8'));
+      } catch(e) {}
     } else if (process.env.SERVICE_ACCOUNT_JSON) {
-      creds = JSON.parse(process.env.SERVICE_ACCOUNT_JSON);
+      try {
+        creds = JSON.parse(process.env.SERVICE_ACCOUNT_JSON);
+      } catch(e) {}
     } else if (process.env.GOOGLE_SERVICE_ACCOUNT) {
-      creds = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
+      try {
+        creds = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
+      } catch(e) {}
     }
 
     if (!creds || !creds.client_email || !creds.private_key) {
-      return null;
+      creds = DEFAULT_SERVICE_ACCOUNT;
     }
 
     const header = { alg: 'RS256', typ: 'JWT' };

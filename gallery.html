@@ -1589,10 +1589,15 @@
 
     // Base API helper
     function getApiBase() {
-      if (window.location.origin && window.location.origin.startsWith('http') && !window.location.origin.includes('github.io')) {
-        return window.location.origin;
+      const host = window.location.hostname;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        return (window.location.port === '5000') ? '' : 'http://localhost:5000';
       }
-      return 'http://localhost:5000';
+      if (host.includes('vercel.app')) {
+        return '';
+      }
+      // GitHub Pages (quangh161t25.github.io) hoặc trên điện thoại
+      return 'https://luu-anh-video-api.vercel.app';
     }
 
     // Fetch data from Node API or Fallback CSV

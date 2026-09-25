@@ -1081,6 +1081,19 @@
       showToast("📂 Đang phát video từ máy tính!");
     }
 
+    // Helper lấy URL API Backend thông minh (hỗ trợ Localhost, Vercel & GitHub Pages trên điện thoại)
+    function getApiBase() {
+      const host = window.location.hostname;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        return (window.location.port === '5000') ? '' : 'http://localhost:5000';
+      }
+      if (host.includes('vercel.app')) {
+        return '';
+      }
+      // GitHub Pages (quangh161t25.github.io) hoặc trên điện thoại
+      return 'https://luu-anh-video-api.vercel.app';
+    }
+
     // ==========================================
     // ĐỒNG BỘ TỪ GOOGLE SHEET (DATA)
     // ==========================================
@@ -1090,15 +1103,16 @@
       try {
         let rows = [];
 
-        // 1. Thử gọi qua API Server Local cổng 5000
+        // 1. Thử gọi qua API Server (Local hoặc Vercel)
         try {
-          const res = await fetch('http://localhost:5000/api/get-sheet-videos');
+          const apiBase = getApiBase();
+          const res = await fetch(`${apiBase}/api/get-sheet-videos`);
           const data = await res.json();
           if (data.status === 'success' && data.data) {
             rows = data.data;
           }
         } catch (e) {
-          console.warn("Local server offline, fallback to public CSV export...", e);
+          console.warn("API server offline, fallback to public CSV export...", e);
         }
 
         // 2. Fallback nếu không chạy local server: dùng Google Sheets CSV Export công khai
