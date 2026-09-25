@@ -889,18 +889,24 @@
     </div>
 
     <div class="card">
-      <!-- GOOGLE SHEET CONFIGURATION -->
+      <!-- GOOGLE SHEET CONFIGURATION & API SYNC -->
       <div class="sheet-box">
         <div class="sheet-header">
           <span class="sheet-title">
-            <i data-lucide="table-2" style="width: 18px; height: 18px;"></i>
-            Google Sheet: <code>luu_anh_video_api (Sheet: DATA)</code>
+            <i data-lucide="database" style="width: 18px; height: 18px;"></i>
+            Google Sheet: <code>luu_anh_video_api (Sheet: DATA & API)</code>
           </span>
-          <div style="display: flex; gap: 8px;">
-            <button onclick="testGoogleSheetSync()" class="sheet-status" style="border: 1px solid #10b981; cursor: pointer; background: rgba(16, 185, 129, 0.25);">
-              <i data-lucide="zap" style="width: 12px; height: 12px;"></i> Test Kết Nối Sheet
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" onclick="saveConfigToGoogleSheet()" class="sheet-status" style="border: 1px solid #10b981; cursor: pointer; background: #059669; color: white;">
+              <i data-lucide="save" style="width: 12px; height: 12px;"></i> Lưu Cấu Hình Vào Sheet API
+            </button>
+            <button type="button" onclick="fetchConfigFromSheet(true)" class="sheet-status" style="border: 1px solid #38bdf8; cursor: pointer; background: rgba(56, 189, 248, 0.2); color: #38bdf8;">
+              <i data-lucide="refresh-cw" style="width: 12px; height: 12px;"></i> Tải Lại Từ Sheet API
             </button>
             <a href="https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/edit?gid=0#gid=0" target="_blank" class="sheet-status" style="text-decoration: none;">
+              <i data-lucide="table" style="width: 12px; height: 12px;"></i> Mở Sheet API
+            </a>
+            <a href="https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/edit?gid=2045676919#gid=2045676919" target="_blank" class="sheet-status" style="text-decoration: none;">
               <i data-lucide="external-link" style="width: 12px; height: 12px;"></i> Mở Sheet DATA
             </a>
           </div>
@@ -908,11 +914,11 @@
         
         <div class="sheet-inputs">
           <div style="background: rgba(16, 185, 129, 0.1); border: 1px dashed rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; flex-wrap: wrap; gap: 6px;">
-            <span style="color: #34d399; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+            <span id="apiSyncStatusText" style="color: #34d399; font-weight: 600; display: flex; align-items: center; gap: 6px;">
               <i data-lucide="check-circle-2" style="width: 16px; height: 16px;"></i>
               Đã kết nối Service Account: <code>ca-nhan@h161-508101.iam.gserviceaccount.com</code>
             </span>
-            <span style="color: #94a3b8; font-size: 11px;">7 Cột: id, ngay, ngay_gio, dinh_dang, link, tên, ghi chú</span>
+            <span style="color: #94a3b8; font-size: 11px;">Tự động đồng bộ cấu hình vào Google Sheet tab <strong>API</strong></span>
           </div>
 
           <div>
@@ -1188,8 +1194,11 @@
     let fileQueue = [];
     let isUploading = false;
 
+    let saveTimeout = null;
+
     window.addEventListener('DOMContentLoaded', () => {
       loadSavedConfig();
+      fetchConfigFromSheet(false);
     });
 
     function selectPlatform(platform) {
@@ -1203,20 +1212,138 @@
       lucide.createIcons();
     }
 
-    function saveConfig() {
-      const config = {
-        sheet_webapp_url: document.getElementById('sheet_webapp_url')?.value || '',
-        cld_name: document.getElementById('cld_name')?.value || '',
-        cld_preset: document.getElementById('cld_preset')?.value || '',
-        catbox_userhash: document.getElementById('catbox_userhash')?.value || '',
-        litter_time: document.getElementById('litter_time')?.value || '72h',
-        tg_token: document.getElementById('tg_token')?.value || '',
-        tg_chatid: document.getElementById('tg_chatid')?.value || '',
-        dood_key: document.getElementById('dood_key')?.value || '',
-        sb_url: document.getElementById('sb_url')?.value || '',
-        sb_key: document.getElementById('sb_key')?.value || '',
+    function getFormConfigObject() {
+      return {
+        sheet_webapp_url: document.getElementById('sheet_webapp_url')?.value.trim() || '',
+        cld_name: document.getElementById('cld_name')?.value.trim() || '',
+        cld_preset: document.getElementById('cld_preset')?.value.trim() || '',
+        catbox_userhash: document.getElementById('catbox_userhash')?.value.trim() || '',
+        litter_time: document.getElementById('litter_time')?.value.trim() || '72h',
+        tg_token: document.getElementById('tg_token')?.value.trim() || '',
+        tg_chatid: document.getElementById('tg_chatid')?.value.trim() || '',
+        dood_key: document.getElementById('dood_key')?.value.trim() || '',
+        sb_url: document.getElementById('sb_url')?.value.trim() || '',
+        sb_key: document.getElementById('sb_key')?.value.trim() || '',
       };
+    }
+
+    function applyConfigToForm(config) {
+      if (!config || typeof config !== 'object') return;
+      if (config.sheet_webapp_url !== undefined && document.getElementById('sheet_webapp_url')) document.getElementById('sheet_webapp_url').value = config.sheet_webapp_url;
+      if (config.cld_name !== undefined && document.getElementById('cld_name')) document.getElementById('cld_name').value = config.cld_name;
+      if (config.cld_preset !== undefined && document.getElementById('cld_preset')) document.getElementById('cld_preset').value = config.cld_preset;
+      if (config.catbox_userhash !== undefined && document.getElementById('catbox_userhash')) document.getElementById('catbox_userhash').value = config.catbox_userhash;
+      if (config.litter_time !== undefined && document.getElementById('litter_time')) document.getElementById('litter_time').value = config.litter_time;
+      if (config.tg_token !== undefined && document.getElementById('tg_token')) document.getElementById('tg_token').value = config.tg_token;
+      if (config.tg_chatid !== undefined && document.getElementById('tg_chatid')) document.getElementById('tg_chatid').value = config.tg_chatid;
+      if (config.dood_key !== undefined && document.getElementById('dood_key')) document.getElementById('dood_key').value = config.dood_key;
+      if (config.sb_url !== undefined && document.getElementById('sb_url')) document.getElementById('sb_url').value = config.sb_url;
+      if (config.sb_key !== undefined && document.getElementById('sb_key')) document.getElementById('sb_key').value = config.sb_key;
+    }
+
+    function saveConfig(autoSyncSheet = true) {
+      const config = getFormConfigObject();
       localStorage.setItem('media_hub_config_v2', JSON.stringify(config));
+
+      if (autoSyncSheet) {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+          saveConfigToGoogleSheet(false);
+        }, 1500);
+      }
+    }
+
+    async function saveConfigToGoogleSheet(showToastAlert = true) {
+      const config = getFormConfigObject();
+      localStorage.setItem('media_hub_config_v2', JSON.stringify(config));
+
+      const statusEl = document.getElementById('apiSyncStatusText');
+      if (statusEl) {
+        statusEl.innerHTML = `<i data-lucide="loader-2" class="spin" style="width:16px;height:16px;color:#38bdf8;"></i> <span style="color:#38bdf8;">Đang lưu cấu hình vào Google Sheet [API]...</span>`;
+        lucide.createIcons();
+      }
+
+      try {
+        let isSaved = false;
+
+        // 1. Gửi qua Backend Server / Serverless function
+        const endpoints = ['/api/save-config', 'http://localhost:5000/api/save-config'];
+        for (const ep of endpoints) {
+          try {
+            const res = await fetch(ep, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(config)
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+              isSaved = true;
+              break;
+            }
+          } catch(e) {}
+        }
+
+        if (isSaved) {
+          const nowStr = new Date().toLocaleTimeString('vi-VN');
+          if (statusEl) {
+            statusEl.innerHTML = `<i data-lucide="check-circle-2" style="width:16px;height:16px;color:#34d399;"></i> <span style="color:#34d399;">Đã lưu toàn bộ cấu hình vào Google Sheet <strong>[API]</strong> (${nowStr})</span>`;
+            lucide.createIcons();
+          }
+          if (showToastAlert) showToast('🎉 Đã lưu toàn bộ API & cấu hình vào Google Sheet [API]! Lần sau vào web sẽ tự động điền sẵn.');
+        } else {
+          if (statusEl) {
+            statusEl.innerHTML = `<i data-lucide="check-circle-2" style="width:16px;height:16px;color:#34d399;"></i> <span style="color:#34d399;">Đã lưu vào bộ nhớ trình duyệt (Local)</span>`;
+            lucide.createIcons();
+          }
+          if (showToastAlert) showToast('💾 Đã lưu cấu hình vào bộ nhớ máy!');
+        }
+      } catch (err) {
+        console.error('Lỗi lưu cấu hình:', err);
+        if (showToastAlert) showToast('⚠️ Đã lưu cục bộ (Local Storage).');
+      }
+    }
+
+    async function fetchConfigFromSheet(showToastAlert = false) {
+      const statusEl = document.getElementById('apiSyncStatusText');
+      if (showToastAlert && statusEl) {
+        statusEl.innerHTML = `<i data-lucide="loader-2" class="spin" style="width:16px;height:16px;color:#38bdf8;"></i> <span style="color:#38bdf8;">Đang tải cấu hình từ Google Sheet [API]...</span>`;
+        lucide.createIcons();
+      }
+
+      try {
+        let sheetConfig = null;
+
+        // 1. Thử gọi API Backend Server / Vercel
+        const endpoints = ['/api/get-config', 'http://localhost:5000/api/get-config'];
+        for (const ep of endpoints) {
+          try {
+            const res = await fetch(ep);
+            const data = await res.json();
+            if (data.status === 'success' && data.data) {
+              sheetConfig = data.data;
+              break;
+            }
+          } catch(e) {}
+        }
+
+        if (sheetConfig && Object.keys(sheetConfig).length > 0) {
+          applyConfigToForm(sheetConfig);
+          localStorage.setItem('media_hub_config_v2', JSON.stringify(sheetConfig));
+
+          const nowStr = new Date().toLocaleTimeString('vi-VN');
+          if (statusEl) {
+            statusEl.innerHTML = `<i data-lucide="check-circle-2" style="width:16px;height:16px;color:#34d399;"></i> <span style="color:#34d399;">Đã tự động nạp cấu hình từ Google Sheet <strong>[API]</strong> (${nowStr})</span>`;
+            lucide.createIcons();
+          }
+          if (showToastAlert) showToast('🎉 Đã nạp đầy đủ cấu hình từ Google Sheet [API]!');
+          return;
+        }
+      } catch(err) {
+        console.warn('Không thể nạp từ Google Sheet API:', err);
+      }
+
+      // Fallback nếu không kết nối được sheet: dùng LocalStorage
+      loadSavedConfig();
     }
 
     function loadSavedConfig() {
@@ -1224,16 +1351,7 @@
       if (saved) {
         try {
           const config = JSON.parse(saved);
-          if (config.sheet_webapp_url && document.getElementById('sheet_webapp_url')) document.getElementById('sheet_webapp_url').value = config.sheet_webapp_url;
-          if (config.cld_name && document.getElementById('cld_name')) document.getElementById('cld_name').value = config.cld_name;
-          if (config.cld_preset && document.getElementById('cld_preset')) document.getElementById('cld_preset').value = config.cld_preset;
-          if (config.catbox_userhash && document.getElementById('catbox_userhash')) document.getElementById('catbox_userhash').value = config.catbox_userhash;
-          if (config.litter_time && document.getElementById('litter_time')) document.getElementById('litter_time').value = config.litter_time;
-          if (config.tg_token && document.getElementById('tg_token')) document.getElementById('tg_token').value = config.tg_token;
-          if (config.tg_chatid && document.getElementById('tg_chatid')) document.getElementById('tg_chatid').value = config.tg_chatid;
-          if (config.dood_key && document.getElementById('dood_key')) document.getElementById('dood_key').value = config.dood_key;
-          if (config.sb_url && document.getElementById('sb_url')) document.getElementById('sb_url').value = config.sb_url;
-          if (config.sb_key && document.getElementById('sb_key')) document.getElementById('sb_key').value = config.sb_key;
+          applyConfigToForm(config);
         } catch(e) {}
       }
     }
