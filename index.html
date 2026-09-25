@@ -998,11 +998,11 @@
               <i data-lucide="play-circle" style="width: 16px; height: 16px; color: #eab308;"></i> DoodStream
             </span>
             <div style="display: flex; gap: 4px;">
-              <span class="tag tag-perm" style="background: rgba(234, 179, 8, 0.25); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.4);">⭐ Tốt Nhất Video 500MB+</span>
+              <span class="tag tag-rec" style="background: rgba(234, 179, 8, 0.15); color: #fde047;">⚡ Vercel / Mobile / PC</span>
               <span class="tag tag-perm">Vĩnh Viễn 100%</span>
             </div>
           </div>
-          <div class="platform-desc">Lưu trữ Video / Phim 500MB, 1GB, 5GB vĩnh viễn không giới hạn dung lượng & có Player xem trực tiếp</div>
+          <div class="platform-desc">Lưu Video/Phim lớn 500MB+ Vĩnh Viễn (Hỗ trợ Vercel Serverless & Tự động vượt CORS)</div>
         </div>
 
         <!-- 6. Supabase Storage -->
@@ -1034,11 +1034,11 @@
               <i data-lucide="file-up" style="width: 16px; height: 16px; color: #38bdf8;"></i> TmpFiles Cloud
             </span>
             <div style="display: flex; gap: 4px;">
-              <span class="tag tag-perm" style="background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4);">⚡ Hỗ Trợ 5GB (500MB+)</span>
-              <span class="tag tag-temp">Tạm Thời</span>
+              <span class="tag tag-perm" style="background: rgba(56, 189, 248, 0.25); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.5);">📱 Khuyên Dùng Cho Video 500MB+</span>
+              <span class="tag tag-perm" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">⚡ Lên Đến 5GB</span>
             </div>
           </div>
-          <div class="platform-desc">Tải tệp lớn &lt; 5GB (500MB, 1GB, 2GB...) trực tiếp từ điện thoại không cần tài khoản</div>
+          <div class="platform-desc">Tải video/tệp lớn 500MB, 1GB, 2GB lên đến 5GB trực tiếp 100% trên điện thoại không lỗi CORS</div>
         </div>
       </div>
 
@@ -2231,24 +2231,47 @@
       });
     }
 
-    // 5. DOODSTREAM UPLOAD (CHUYÊN VIDEO)
+    // 5. DOODSTREAM UPLOAD (CHUYÊN VIDEO & PHIM 500MB+ VĨNH VIỄN)
     async function uploadDoodstream(file, onProgress) {
-      const apiKey = document.getElementById('dood_key')?.value?.trim();
+      const apiKey = document.getElementById('dood_key')?.value?.trim() || '578856ivpifyyfyuloy45x';
       if (!apiKey) {
         const err = new Error("Chưa nhập DoodStream API Key!");
         err.hint = "Vui lòng nhập API Key trong phần Cấu hình DoodStream.";
         throw err;
       }
 
-      const serverRes = await fetch(`https://doodapi.com/api/upload/server?key=${apiKey}`);
-      const serverData = await serverRes.json();
-      if (serverData.status !== 200 || !serverData.result) {
-        const err = new Error("Không thể kết nối máy chủ DoodStream: " + (serverData.msg || ''));
-        err.hint = "Kiểm tra lại DoodStream API Key chính xác.";
+      let uploadUrl = null;
+      const targetApi = `https://doodapi.co/api/upload/server?key=${apiKey}`;
+      const endpoints = [
+        `/api/dood-server?key=${apiKey}`,
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(targetApi)}`,
+        targetApi
+      ];
+
+      for (const ep of endpoints) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 6000);
+          const serverRes = await fetch(ep, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          if (serverRes.ok) {
+            const serverData = await serverRes.json();
+            if (serverData && serverData.result) {
+              uploadUrl = serverData.result;
+              break;
+            }
+          }
+        } catch (e) {
+          console.warn("Thử endpoint DoodStream:", ep, e.message);
+        }
+      }
+
+      if (!uploadUrl) {
+        const err = new Error("Không thể kết nối máy chủ DoodStream!");
+        err.hint = "Vui lòng thử lại hoặc chuyển sang tab '⚡ TmpFiles Cloud' (Hỗ trợ 5GB).";
         throw err;
       }
 
-      const uploadUrl = serverData.result;
       const formData = new FormData();
       formData.append("api_key", apiKey);
       formData.append("file", file);
@@ -2270,20 +2293,20 @@
                 const video = data.result[0];
                 resolve(video.download_url || video.protected_embed);
               } else {
-                const err = new Error("Lỗi Doodstream: " + xhr.responseText);
-                err.hint = "Thử lại hoặc kiểm tra định dạng video.";
+                const err = new Error("Lỗi Doodstream: " + (data.msg || xhr.responseText));
+                err.hint = "Kiểm tra định dạng video hoặc chuyển sang TmpFiles Cloud.";
                 reject(err);
               }
             } catch(e) {
               reject(new Error("Lỗi phản hồi từ DoodStream: " + xhr.responseText));
             }
           } else {
-            reject(new Error("Lỗi server Doodstream: " + xhr.statusText));
+            reject(new Error("Lỗi máy chủ Doodstream: " + xhr.statusText));
           }
         };
         xhr.onerror = () => {
-          const err = new Error("Lỗi kết nối tới DoodStream (Mạng hoặc bị chặn)");
-          err.hint = "Kiểm tra kết nối mạng trên điện thoại.";
+          const err = new Error("Lỗi kết nối tới máy chủ DoodStream CDN");
+          err.hint = "Kiểm tra mạng trên điện thoại hoặc bấm đổi sang TmpFiles Cloud.";
           reject(err);
         };
         xhr.send(formData);

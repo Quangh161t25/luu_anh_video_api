@@ -123,6 +123,23 @@ module.exports = async (req, res) => {
     return;
   }
 
+  // 6. DoodStream Server URL Proxy (Bypass CORS)
+  if (url.includes('/dood-server') || url.includes('/dood')) {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    try {
+      const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+      const key = parsedUrl.searchParams.get('key') || '578856ivpifyyfyuloy45x';
+      const doodRes = await fetch(`https://doodapi.co/api/upload/server?key=${key}`);
+      const doodData = await doodRes.json();
+      res.statusCode = 200;
+      res.end(JSON.stringify(doodData));
+    } catch (err) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ status: 500, msg: err.message }));
+    }
+    return;
+  }
+
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.statusCode = 200;
   res.end(JSON.stringify({ status: 'ok', message: 'Vercel Serverless Function Ready' }));

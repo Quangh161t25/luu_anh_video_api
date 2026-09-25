@@ -311,6 +311,23 @@ const handler = (req, res) => {
     return;
   }
 
+  // API Lấy máy chủ DoodStream Upload (Vượt CORS)
+  if (req.method === 'GET' && req.url.startsWith('/api/dood-server')) {
+    const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const key = parsedUrl.searchParams.get('key') || '578856ivpifyyfyuloy45x';
+    fetch(`https://doodapi.co/api/upload/server?key=${key}`)
+      .then(r => r.json())
+      .then(doodData => {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify(doodData));
+      })
+      .catch(err => {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ status: 500, msg: err.message }));
+      });
+    return;
+  }
+
   // API Upload Catbox qua Server sử dụng node-catbox (100% không lỗi CORS)
   if (req.method === 'POST' && req.url.startsWith('/api/catbox-upload')) {
     const contentType = req.headers['content-type'] || '';
