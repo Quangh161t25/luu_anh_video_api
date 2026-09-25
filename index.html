@@ -2376,7 +2376,7 @@
         if (data.result && data.result.length > 0) {
           const video = data.result[0];
           if (onProgress) onProgress(100);
-          return video.download_url || video.protected_embed;
+          return video.protected_embed || video.download_url;
         } else {
           const err = new Error("Lỗi Doodstream: " + (data.msg || JSON.stringify(data)));
           err.hint = "Kiểm tra định dạng video MP4/MKV hoặc chuyển sang TmpFiles Cloud.";

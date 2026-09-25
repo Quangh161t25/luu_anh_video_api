@@ -923,7 +923,8 @@
       const url = item.url.trim();
       const isHls = url.includes('.m3u8');
       const isYouTube = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
-      const isEmbed = url.includes('dood') || url.includes('dailymotion') || url.includes('vimeo');
+      const isDood = url.includes('dood') || url.includes('dsvplay') || url.includes('ds2play');
+      const isEmbed = isDood || url.includes('dailymotion') || url.includes('vimeo');
 
       // 1. Nếu là link YouTube hoặc Web Embed
       if (isYouTube) {
@@ -939,7 +940,11 @@
         videoPlayer.style.display = 'none';
         videoPlayer.pause();
         embedPlayer.style.display = 'block';
-        embedPlayer.src = url;
+        let embedSrc = url;
+        if (isDood && embedSrc.includes('/d/')) {
+          embedSrc = embedSrc.replace('/d/', '/e/');
+        }
+        embedPlayer.src = embedSrc;
         return;
       }
 
