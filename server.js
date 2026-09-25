@@ -40,13 +40,21 @@ const MIME_TYPES = {
 // Hàm lấy OAuth2 Access Token từ Google Service Account
 async function getGoogleAccessToken() {
   try {
+    let creds = null;
     const credPath = path.join(__dirname, 'service_account.json');
-    if (!fs.existsSync(credPath)) {
-      console.error('Không tìm thấy file service_account.json');
+    if (fs.existsSync(credPath)) {
+      creds = JSON.parse(fs.readFileSync(credPath, 'utf8'));
+    } else if (process.env.SERVICE_ACCOUNT_JSON) {
+      creds = JSON.parse(process.env.SERVICE_ACCOUNT_JSON);
+    } else if (process.env.GOOGLE_SERVICE_ACCOUNT) {
+      creds = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
+    }
+
+    if (!creds || !creds.client_email || !creds.private_key) {
+      console.warn('Không tìm thấy thông tin Service Account (file service_account.json hoặc biến môi trường SERVICE_ACCOUNT_JSON)');
       return null;
     }
 
-    const creds = JSON.parse(fs.readFileSync(credPath, 'utf8'));
     const header = { alg: 'RS256', typ: 'JWT' };
     const now = Math.floor(Date.now() / 1000);
     const claim = {
@@ -156,23 +164,50 @@ async function appendToGoogleSheet(rowData) {
 async function getGoogleSheetRows() {
   try {
     const token = await getGoogleAccessToken();
-    if (!token) return [];
-    await ensureSheetAndHeaders(token);
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A2:G`;
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await res.json();
-    if (data.values) {
-      return data.values.map(row => ({
-        id: row[0] || '',
-        ngay: row[1] || '',
-        ngay_gio: row[2] || '',
-        dinh_dang: row[3] || 'FILE',
-        link: row[4] || '',
-        ten: row[5] || '',
-        ghi_chu: row[6] || ''
-      }));
+    if (token) {
+      await ensureSheetAndHeaders(token);
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A2:G`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.values) {
+        return data.values.map(row => ({
+          id: row[0] || '',
+          ngay: row[1] || '',
+          ngay_gio: row[2] || '',
+          dinh_dang: row[3] || 'FILE',
+          link: row[4] || '',
+          ten: row[5] || '',
+          ghi_chu: row[6] || ''
+        }));
+      }
+    }
+
+    // Fallback: đọc trực tiếp từ Google Sheet CSV công khai (hỗ trợ Vercel không cần key)
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=0`;
+    const csvRes = await fetch(csvUrl);
+    if (csvRes.ok) {
+      const csvText = await csvRes.text();
+      const lines = csvText.split('\n');
+      const results = [];
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
+        if (cols.length >= 5 && cols[4] && cols[4].startsWith('http')) {
+          results.push({
+            id: cols[0] || Date.now().toString(),
+            ngay: cols[1] || '',
+            ngay_gio: cols[2] || '',
+            dinh_dang: cols[3] || 'FILE',
+            link: cols[4] || '',
+            ten: cols[5] || ('file_' + i),
+            ghi_chu: cols[6] || ''
+          });
+        }
+      }
+      return results;
     }
     return [];
   } catch (err) {
@@ -181,7 +216,7 @@ async function getGoogleSheetRows() {
   }
 }
 
-const server = http.createServer((req, res) => {
+const handler = (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -503,14 +538,19 @@ const server = http.createServer((req, res) => {
 
   res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
   res.end('Not Found');
-});
+};
 
-server.listen(PORT, () => {
-  console.log(`\n================================================================`);
-  console.log(`🚀 Media & File Hub Server đang chạy tại: http://localhost:${PORT}`);
-  console.log(`📊 Kết nối Google Sheet: ${SPREADSHEET_ID}`);
-  console.log(`📑 Sheet đích: ${SHEET_NAME} (Cột: id, ngay, ngay_gio, dinh_dang, link, tên, ghi chú)`);
-  console.log(`📧 Service Account: ca-nhan@h161-508101.iam.gserviceaccount.com`);
-  console.log(`🖼️ Hỗ trợ: Video (MP4...), Ảnh (JPG, PNG, WEBP...), PDF & Tài liệu!`);
-  console.log(`================================================================\n`);
-});
+module.exports = handler;
+
+if (require.main === module && !process.env.VERCEL) {
+  const server = http.createServer(handler);
+  server.listen(PORT, () => {
+    console.log(`\n================================================================`);
+    console.log(`🚀 Media & File Hub Server đang chạy tại: http://localhost:${PORT}`);
+    console.log(`📊 Kết nối Google Sheet: ${SPREADSHEET_ID}`);
+    console.log(`📑 Sheet đích: ${SHEET_NAME} (Cột: id, ngay, ngay_gio, dinh_dang, link, tên, ghi chú)`);
+    console.log(`📧 Service Account: ca-nhan@h161-508101.iam.gserviceaccount.com`);
+    console.log(`🖼️ Hỗ trợ: Video (MP4...), Ảnh (JPG, PNG, WEBP...), PDF & Tài liệu!`);
+    console.log(`================================================================\n`);
+  });
+}

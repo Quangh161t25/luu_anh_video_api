@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/gallery", "destination": "/gallery.html" },
+    { "source": "/player", "destination": "/player.html" },
+    { "source": "/api/(.*)", "destination": "/api/index.js" }
+  ]
+}
