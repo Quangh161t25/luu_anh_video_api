@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modul Cấu Hình Hệ Thống & Nền Tảng Lưu Trữ - Media Cloud Hub</title>
+  <!-- Google Fonts & Lucide Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --success: #10b981;
+      --success-hover: #059669;
+      --bg: #0b0f19;
+      --sidebar-bg: #0e1424;
+      --card-bg: #141b2d;
+      --card-border: #222f4c;
+      --card-border-hover: #3b82f6;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --input-bg: #0b0f19;
+      --input-border: #334155;
+      --accent: #38bdf8;
+      --sheet-green: #0f9d58;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* APP LAYOUT */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+    }
+
+    /* SIDEBAR */
+    .app-sidebar {
+      width: 270px;
+      min-width: 270px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 50;
+      padding: 20px 16px;
+      gap: 16px;
+    }
+
+    .app-sidebar::-webkit-scrollbar { width: 5px; }
+    .app-sidebar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .sidebar-brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(56, 189, 248, 0.25));
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .sidebar-brand-text h2 {
+      font-size: 14px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a5b4fc 0%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-brand-text span {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .sidebar-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sidebar-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .sidebar-nav-item:hover {
+      background: rgba(99, 102, 241, 0.12);
+      color: #f1f5f9;
+      border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .sidebar-nav-item.active {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(56, 189, 248, 0.2));
+      color: #38bdf8;
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .sidebar-nav-item .mod-badge {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+    }
+
+    .sheet-link-item:hover {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+    }
+
+    .btn-save-mod {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px dashed rgba(16, 185, 129, 0.4);
+      color: #34d399;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+      margin-bottom: 8px;
+    }
+
+    .btn-save-mod:hover {
+      background: rgba(16, 185, 129, 0.25);
+      border-color: #10b981;
+      color: white;
+    }
+
+    .saved-modules-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 250px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .saved-modules-container::-webkit-scrollbar { width: 4px; }
+    .saved-modules-container::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+
+    .saved-mod-card {
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #141c2e;
+      border: 1px solid var(--card-border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .saved-mod-card:hover {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .saved-mod-card.active {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.12);
+    }
+
+    .saved-mod-card .mod-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .saved-mod-card .mod-sub {
+      font-size: 10px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    .btn-del-mod {
+      background: transparent;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+
+    .btn-del-mod:hover {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px solid var(--card-border);
+      font-size: 11px;
+      color: #64748b;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    /* MAIN CONTENT */
+    .app-main {
+      flex: 1;
+      min-width: 0;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background-image: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.12), transparent 50%);
+      overflow-y: auto;
+    }
+
+    /* HEADER */
+    .module-header {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .module-title-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .module-icon-wrap {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(56, 189, 248, 0.25));
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #38bdf8;
+      flex-shrink: 0;
+    }
+
+    .module-header h1 {
+      font-size: 20px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a5b4fc 0%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 3px;
+    }
+
+    .module-header p {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .module-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* SECTION BOX */
+    .section-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px 24px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .section-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title i { color: #38bdf8; }
+
+    /* FORM STYLES */
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 10px 14px;
+      background: #0b0f19;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      border-color: #6366f1;
+    }
+
+    .form-card {
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .form-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .sheet-status {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .sheet-status:hover {
+      background: rgba(16, 185, 129, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-submit-config {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-submit-config:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #10b981;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      display: none;
+      z-index: 1000;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @media (max-width: 960px) {
+      .app-layout { flex-direction: column; }
+      .app-sidebar { width: 100%; min-width: 100%; height: auto; position: static; }
+      .form-grid-2 { grid-template-columns: 1fr; }
+      .app-main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-layout">
+    <!-- =================================================== -->
+    <!-- 1. NƠI LƯU MODUL (Sidebar bên trái) -->
+    <!-- =================================================== -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand-icon">
+          <i data-lucide="layers" style="width: 22px; height: 22px;"></i>
+        </div>
+        <div class="sidebar-brand-text">
+          <h2>MEDIA CLOUD HUB</h2>
+          <span>Hệ Thống Modul & Cloud</span>
+        </div>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-section-title">
+          <span>1. NƠI LƯU MODUL HỆ THỐNG</span>
+        </div>
+        <nav class="sidebar-nav">
+          <a href="index.html" class="sidebar-nav-item">
+            <i data-lucide="upload-cloud" style="width: 16px; height: 16px;"></i>
+            <span>Modul Tải Lên Media</span>
+          </a>
+          <a href="gallery.html" class="sidebar-nav-item">
+            <i data-lucide="layout-grid" style="width: 16px; height: 16px;"></i>
+            <span>Modul Bộ Sưu Tập & File</span>
+          </a>
+          <a href="player.html" class="sidebar-nav-item">
+            <i data-lucide="play-circle" style="width: 16px; height: 16px;"></i>
+            <span>Modul Xem Video Từ Link</span>
+          </a>
+          <a href="config.html" class="sidebar-nav-item active">
+            <i data-lucide="settings" style="width: 16px; height: 16px;"></i>
+            <span>Modul Cấu Hình Hệ Thống</span>
+            <span class="mod-badge">Hiện Tại</span>
+          </a>
+          <a href="https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/edit?gid=1623547844#gid=1623547844" target="_blank" class="sidebar-nav-item sheet-link-item">
+            <i data-lucide="sheet" style="width: 16px; height: 16px; color: #34d399;"></i>
+            <span>Mở Sheet DATA</span>
+            <i data-lucide="external-link" style="width: 12px; height: 12px; margin-left: auto; color: #64748b;"></i>
+          </a>
+          <a href="https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/edit?gid=0#gid=0" target="_blank" class="sidebar-nav-item sheet-link-item">
+            <i data-lucide="database" style="width: 16px; height: 16px; color: #38bdf8;"></i>
+            <span>Mở Sheet API Cấu Hình</span>
+            <i data-lucide="external-link" style="width: 12px; height: 12px; margin-left: auto; color: #64748b;"></i>
+          </a>
+        </nav>
+      </div>
+
+      <div class="sidebar-group" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+        <div class="sidebar-section-title">
+          <span>LƯU & NẠP CẤU HÌNH MODUL</span>
+          <span style="font-size: 11px; color: #38bdf8; cursor: pointer; font-weight: 700;" onclick="saveCustomModule()" title="Lưu cấu hình hiện tại thành modul mới">+ Thêm Mới</span>
+        </div>
+        
+        <button type="button" class="btn-save-mod" onclick="saveCustomModule()">
+          <i data-lucide="save" style="width: 14px; height: 14px;"></i>
+          <span>Lưu Cấu Hình Thành Modul</span>
+        </button>
+
+        <div class="saved-modules-container" id="savedModulesList"></div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span style="display: flex; align-items: center; gap: 6px; color: #34d399; font-weight: 600;">
+            <span class="status-dot"></span> Backend Sẵn Sàng
+          </span>
+          <span style="color: #64748b; font-size: 10px;">v2.5 Pro</span>
+        </div>
+        <span style="font-size: 10px; color: #64748b;">Tự động đồng bộ Google Sheet</span>
+      </div>
+    </aside>
+
+    <!-- =================================================== -->
+    <!-- MAIN CONTENT -->
+    <!-- =================================================== -->
+    <main class="app-main">
+
+      <!-- HEADER -->
+      <header class="module-header">
+        <div class="module-title-box">
+          <div class="module-icon-wrap">
+            <i data-lucide="settings" style="width: 26px; height: 26px;"></i>
+          </div>
+          <div>
+            <h1>Modul Cấu Hình Hệ Thống & Nền Tảng Lưu Trữ</h1>
+            <p>Quản lý API Token, Google Sheet Service Account, DoodStream, Cloudinary, Telegram, Catbox...</p>
+          </div>
+        </div>
+
+        <div class="module-header-actions">
+          <button type="button" onclick="saveConfigToGoogleSheet()" class="sheet-status" style="border: 1px solid #10b981; background: #059669; color: white;">
+            <i data-lucide="save" style="width: 13px; height: 13px;"></i> Lưu Vào Sheet API
+          </button>
+          <button type="button" onclick="fetchConfigFromSheet(true)" class="sheet-status" style="border: 1px solid #38bdf8; background: rgba(56, 189, 248, 0.2); color: #38bdf8;">
+            <i data-lucide="refresh-cw" style="width: 13px; height: 13px;"></i> Tải Lại
+          </button>
+          <a href="https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/edit?gid=0#gid=0" target="_blank" class="sheet-status" style="text-decoration: none;">
+            <i data-lucide="table" style="width: 13px; height: 13px;"></i> Mở Sheet API
+          </a>
+        </div>
+      </header>
+
+      <!-- 1. CẤU HÌNH GOOGLE SHEET API -->
+      <section class="section-box">
+        <div class="section-header-row">
+          <div class="section-title">
+            <i data-lucide="database" style="width: 18px; height: 18px;"></i>
+            <span>1. Kết Nối Google Sheet API & Đồng Bộ Tự Động:</span>
+          </div>
+        </div>
+
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px dashed rgba(16, 185, 129, 0.4); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
+          <span id="apiSyncStatusText" style="color: #34d399; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="check-circle-2" style="width: 18px; height: 18px;"></i>
+            Đã kết nối Service Account: <code>ca-nhan@h161-508101.iam.gserviceaccount.com</code>
+          </span>
+          <span style="color: #94a3b8; font-size: 12px;">Đồng bộ dữ liệu hai chiều với Sheet tab <strong>API</strong> & <strong>DATA</strong></span>
+        </div>
+
+        <div class="form-group">
+          <label>Google Apps Script Web App URL (Dự phòng nếu không chạy server cục bộ):</label>
+          <input type="url" id="sheet_webapp_url" placeholder="https://script.google.com/macros/s/.../exec" onchange="saveConfig()">
+        </div>
+      </section>
+
+      <!-- 2. CẤU HÌNH CHI TIẾT TỪNG NỀN TẢNG LƯU TRỮ -->
+      <section class="section-box">
+        <div class="section-header-row">
+          <div class="section-title">
+            <i data-lucide="cloud" style="width: 18px; height: 18px;"></i>
+            <span>2. Cấu Hình Nền Tảng Lưu Trữ (Ảnh, Video, PDF):</span>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <!-- 1. Cloudinary -->
+          <div class="form-card">
+            <div class="form-card-title">
+              <i data-lucide="sparkles" style="width: 16px; height: 16px; color: #a855f7;"></i>
+              <span>Cloudinary (Vĩnh Viễn - Ảnh, Video, PDF)</span>
+            </div>
+            <div class="form-group">
+              <label>Cloud Name:</label>
+              <input type="text" id="cld_name" placeholder="vd: qeld2qwe" value="qeld2qwe" onchange="saveConfig()">
+            </div>
+            <div class="form-group">
+              <label>Upload Preset (Unsigned):</label>
+              <input type="text" id="cld_preset" placeholder="vd: video_preset" onchange="saveConfig()">
+            </div>
+            <p style="font-size: 11px; color: #94a3b8; margin-top: 6px;">💡 Tự động phân loại định dạng image / video / raw.</p>
+          </div>
+
+          <!-- 2. DoodStream -->
+          <div class="form-card">
+            <div class="form-card-title">
+              <i data-lucide="play-circle" style="width: 16px; height: 16px; color: #eab308;"></i>
+              <span>DoodStream (Vĩnh Viễn - Video & Phim 500MB+)</span>
+            </div>
+            <div class="form-group">
+              <label>DoodStream API Key:</label>
+              <input type="text" id="dood_key" placeholder="vd: 578856ivpifyyfyuloy45x" value="578856ivpifyyfyuloy45x" onchange="saveConfig()">
+            </div>
+            <p style="font-size: 11px; color: #fde047; margin-top: 6px;">⚡ Đăng ký miễn phí tại doodstream.com &rarr; Settings/API để lấy key.</p>
+          </div>
+
+          <!-- 3. Telegram API -->
+          <div class="form-card">
+            <div class="form-card-title">
+              <i data-lucide="send" style="width: 16px; height: 16px; color: #38bdf8;"></i>
+              <span>Telegram Cloud API (Vĩnh Viễn &lt;50MB)</span>
+            </div>
+            <div class="form-group">
+              <label>Bot Token:</label>
+              <input type="text" id="tg_token" placeholder="vd: 123456789:ABCdef..." onchange="saveConfig()">
+            </div>
+            <div class="form-group">
+              <label>Chat ID / Channel ID nhận file:</label>
+              <input type="text" id="tg_chatid" placeholder="vd: -100123456789" onchange="saveConfig()">
+            </div>
+          </div>
+
+          <!-- 4. Catbox.moe -->
+          <div class="form-card">
+            <div class="form-card-title">
+              <i data-lucide="cat" style="width: 16px; height: 16px; color: #f43f5e;"></i>
+              <span>Catbox.moe (Vĩnh Viễn 100%)</span>
+            </div>
+            <div class="form-group">
+              <label>Userhash (Tùy chọn - để quản lý file):</label>
+              <input type="text" id="catbox_userhash" placeholder="Để trống nếu không dùng tài khoản" onchange="saveConfig()">
+            </div>
+            <p style="font-size: 11px; color: #34d399; margin-top: 6px;">✅ Lưu file vĩnh viễn trên máy chủ Catbox tối đa 200MB/file.</p>
+          </div>
+
+          <!-- 5. Litterbox -->
+          <div class="form-card">
+            <div class="form-card-title">
+              <i data-lucide="clock" style="width: 16px; height: 16px; color: #facc15;"></i>
+              <span>Litterbox (Tự Hủy Tạm Thời)</span>
+            </div>
+            <div class="form-group">
+              <label>Thời hạn lưu trữ trước khi tự hủy:</label>
+              <select id="litter_time" onchange="saveConfig()">
+                <option value="72h" selected>72 Giờ (3 Ngày)</option>
+                <option value="24h">24 Giờ (1 Ngày)</option>
+                <option value="12h">12 Giờ</option>
+                <option value="1h">1 Giờ</option>
+              </select>
+            </div>
+            <p style="font-size: 11px; color: #facc15; margin-top: 6px;">⏳ File tự động hủy vĩnh viễn sau thời hạn chọn.</p>
+          </div>
+
+          <!-- 6. Supabase Storage -->
+          <div class="form-card">
+            <div class="form-card-title">
+              <i data-lucide="database" style="width: 16px; height: 16px; color: #10b981;"></i>
+              <span>Supabase Storage (PostgreSQL Database)</span>
+            </div>
+            <div class="form-group">
+              <label>Project URL:</label>
+              <input type="url" id="sb_url" placeholder="https://your-project.supabase.co" onchange="saveConfig()">
+            </div>
+            <div class="form-group">
+              <label>Anon Key:</label>
+              <input type="password" id="sb_key" placeholder="eyJhbGciOi..." onchange="saveConfig()">
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
+          <button type="button" class="btn-submit-config" onclick="saveConfigToGoogleSheet(true)">
+            <i data-lucide="save" style="width: 16px; height: 16px;"></i>
+            <span>Lưu Toàn Bộ Cấu Hình Vào Google Sheet API</span>
+          </button>
+          <button type="button" class="btn-submit-config" onclick="resetDefaultConfig()" style="background: #334155;">
+            <i data-lucide="rotate-ccw" style="width: 16px; height: 16px;"></i>
+            <span>Khôi Phục Mặc Định</span>
+          </button>
+        </div>
+      </section>
+
+      <div class="footer">
+        Cấu hình được tự động lưu vào trình duyệt (LocalStorage) và đồng bộ trực tiếp với Google Sheet tab <code>API</code>.
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast">Đã lưu cấu hình!</div>
+
+  <script>
+    lucide.createIcons();
+
+    let saveTimeout = null;
+
+    function getApiBase() {
+      const host = window.location.hostname;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        return (window.location.port === '5000') ? '' : 'http://localhost:5000';
+      }
+      if (host.includes('vercel.app')) return '';
+      return 'https://luu-anh-video-api.vercel.app';
+    }
+
+    const DEFAULT_CONFIG = {
+      sheet_webapp_url: '',
+      cld_name: 'qeld2qwe',
+      cld_preset: 'video_preset',
+      catbox_userhash: '',
+      litter_time: '72h',
+      tg_token: '8192862731:AAGitIiHpAX-4haL8Xw79WanvVa7nYc2UDI',
+      tg_chatid: '-1004258626019',
+      dood_key: '578856ivpifyyfyuloy45x',
+      sb_url: '',
+      sb_key: ''
+    };
+
+    function getFormConfigObject() {
+      return {
+        sheet_webapp_url: document.getElementById('sheet_webapp_url')?.value.trim() || '',
+        cld_name: document.getElementById('cld_name')?.value.trim() || '',
+        cld_preset: document.getElementById('cld_preset')?.value.trim() || '',
+        catbox_userhash: document.getElementById('catbox_userhash')?.value.trim() || '',
+        litter_time: document.getElementById('litter_time')?.value.trim() || '72h',
+        tg_token: document.getElementById('tg_token')?.value.trim() || '',
+        tg_chatid: document.getElementById('tg_chatid')?.value.trim() || '',
+        dood_key: document.getElementById('dood_key')?.value.trim() || '',
+        sb_url: document.getElementById('sb_url')?.value.trim() || '',
+        sb_key: document.getElementById('sb_key')?.value.trim() || '',
+      };
+    }
+
+    function applyConfigToForm(config) {
+      if (!config || typeof config !== 'object') return;
+      if (config.sheet_webapp_url !== undefined && document.getElementById('sheet_webapp_url')) document.getElementById('sheet_webapp_url').value = config.sheet_webapp_url;
+      if (config.cld_name !== undefined && document.getElementById('cld_name')) document.getElementById('cld_name').value = config.cld_name;
+      if (config.cld_preset !== undefined && document.getElementById('cld_preset')) document.getElementById('cld_preset').value = config.cld_preset;
+      if (config.catbox_userhash !== undefined && document.getElementById('catbox_userhash')) document.getElementById('catbox_userhash').value = config.catbox_userhash;
+      if (config.litter_time !== undefined && document.getElementById('litter_time')) document.getElementById('litter_time').value = config.litter_time;
+      if (config.tg_token !== undefined && document.getElementById('tg_token')) document.getElementById('tg_token').value = config.tg_token;
+      if (config.tg_chatid !== undefined && document.getElementById('tg_chatid')) document.getElementById('tg_chatid').value = config.tg_chatid;
+      if (config.dood_key !== undefined && document.getElementById('dood_key')) document.getElementById('dood_key').value = config.dood_key;
+      if (config.sb_url !== undefined && document.getElementById('sb_url')) document.getElementById('sb_url').value = config.sb_url;
+      if (config.sb_key !== undefined && document.getElementById('sb_key')) document.getElementById('sb_key').value = config.sb_key;
+    }
+
+    function loadSavedConfig() {
+      let config = Object.assign({}, DEFAULT_CONFIG);
+      const saved = localStorage.getItem('media_hub_config_v2') || localStorage.getItem('media_hub_config');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === 'object') config = Object.assign(config, parsed);
+        } catch(e) {}
+      }
+      applyConfigToForm(config);
+    }
+
+    function saveConfig(autoSyncSheet = true) {
+      const config = getFormConfigObject();
+      localStorage.setItem('media_hub_config_v2', JSON.stringify(config));
+
+      if (autoSyncSheet) {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+          saveConfigToGoogleSheet(false);
+        }, 1500);
+      }
+    }
+
+    async function saveConfigToGoogleSheet(showToastAlert = true) {
+      const config = getFormConfigObject();
+      localStorage.setItem('media_hub_config_v2', JSON.stringify(config));
+
+      const statusEl = document.getElementById('apiSyncStatusText');
+      if (statusEl) {
+        statusEl.innerHTML = `<i data-lucide="loader-2" class="spin" style="width:18px;height:18px;color:#38bdf8;"></i> <span style="color:#38bdf8;">Đang lưu cấu hình vào Google Sheet [API]...</span>`;
+        lucide.createIcons();
+      }
+
+      try {
+        let isSaved = false;
+        const base = getApiBase();
+        const endpoints = [
+          `${base}/api/save-config`,
+          '/api/save-config',
+          'https://luu-anh-video-api.vercel.app/api/save-config',
+          'http://localhost:5000/api/save-config'
+        ];
+        
+        for (const ep of endpoints) {
+          try {
+            const res = await fetch(ep, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(config)
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+              isSaved = true;
+              break;
+            }
+          } catch(e) {}
+        }
+
+        if (isSaved) {
+          const nowStr = new Date().toLocaleTimeString('vi-VN');
+          if (statusEl) {
+            statusEl.innerHTML = `<i data-lucide="check-circle-2" style="width:18px;height:18px;color:#34d399;"></i> <span style="color:#34d399;">Đã lưu toàn bộ cấu hình vào Google Sheet <strong>[API]</strong> (${nowStr})</span>`;
+            lucide.createIcons();
+          }
+          if (showToastAlert) showToast('🎉 Đã lưu toàn bộ API & cấu hình vào Google Sheet [API]!');
+        } else {
+          if (statusEl) {
+            statusEl.innerHTML = `<i data-lucide="check-circle-2" style="width:18px;height:18px;color:#34d399;"></i> <span style="color:#34d399;">Đã lưu vào bộ nhớ trình duyệt (Local)</span>`;
+            lucide.createIcons();
+          }
+          if (showToastAlert) showToast('💾 Đã lưu cấu hình vào bộ nhớ máy!');
+        }
+      } catch (err) {
+        console.error('Lỗi lưu cấu hình:', err);
+        if (showToastAlert) showToast('⚠️ Đã lưu cục bộ (Local Storage).');
+      }
+    }
+
+    async function fetchConfigFromSheet(showToastAlert = false) {
+      const statusEl = document.getElementById('apiSyncStatusText');
+      if (showToastAlert && statusEl) {
+        statusEl.innerHTML = `<i data-lucide="loader-2" class="spin" style="width:18px;height:18px;color:#38bdf8;"></i> <span style="color:#38bdf8;">Đang tải cấu hình từ Google Sheet [API]...</span>`;
+        lucide.createIcons();
+      }
+
+      try {
+        const base = getApiBase();
+        const endpoints = [
+          `${base}/api/get-config`,
+          '/api/get-config',
+          'https://luu-anh-video-api.vercel.app/api/get-config',
+          'http://localhost:5000/api/get-config'
+        ];
+        
+        let loadedData = null;
+        for (const ep of endpoints) {
+          try {
+            const res = await fetch(ep);
+            if (res.ok) {
+              const resJson = await res.json();
+              if (resJson.status === 'success' && resJson.data) {
+                loadedData = resJson.data;
+                break;
+              }
+            }
+          } catch(e) {}
+        }
+
+        if (loadedData) {
+          applyConfigToForm(loadedData);
+          localStorage.setItem('media_hub_config_v2', JSON.stringify(loadedData));
+          if (statusEl) {
+            statusEl.innerHTML = `<i data-lucide="check-circle-2" style="width:18px;height:18px;color:#34d399;"></i> <span style="color:#34d399;">Đã đồng bộ từ Google Sheet [API] (${new Date().toLocaleTimeString('vi-VN')})</span>`;
+            lucide.createIcons();
+          }
+          if (showToastAlert) showToast('✅ Đã nạp cấu hình mới nhất từ Google Sheet [API]!');
+        }
+      } catch(e) {
+        console.warn('Lỗi đọc sheet API:', e);
+      }
+    }
+
+    function resetDefaultConfig() {
+      if (!confirm("Khôi phục toàn bộ cấu hình về mặc định?")) return;
+      applyConfigToForm(DEFAULT_CONFIG);
+      saveConfig(true);
+      showToast("Đã khôi phục cấu hình mặc định!");
+    }
+
+    // MODUL PRESETS
+    const DEFAULT_MODULES = [
+      { id: 'mod-cld', name: 'Modul Cloudinary Chuẩn', platform: 'cloudinary', desc: 'Vĩnh viễn, Tối ưu Mobile & PC' },
+      { id: 'mod-catbox', name: 'Modul Catbox Vĩnh Viễn', platform: 'catbox', desc: 'Lưu vĩnh viễn không giới hạn' },
+      { id: 'mod-dood', name: 'Modul Video DoodStream', platform: 'doodstream', desc: 'Chuyên Video & Phim lớn 500MB+' },
+      { id: 'mod-tmpfiles', name: 'Modul TmpFiles Cực Nhanh', platform: 'tmpfiles', desc: 'Tải file nặng lên đến 5GB' },
+      { id: 'mod-tele', name: 'Modul Telegram Cloud Bot', platform: 'telegram', desc: 'Lưu qua Bot Telegram cá nhân' }
+    ];
+
+    function getSavedModules() {
+      try {
+        const raw = localStorage.getItem('media_hub_custom_modules');
+        if (raw) return JSON.parse(raw);
+      } catch(e) {}
+      return DEFAULT_MODULES;
+    }
+
+    function saveCustomModule() {
+      const name = prompt("Nhập tên cho Modul cấu hình mới:");
+      if (!name || !name.trim()) return;
+      
+      const modules = getSavedModules();
+      const newMod = {
+        id: 'mod-custom-' + Date.now(),
+        name: name.trim(),
+        desc: `Cấu hình lưu lúc ${new Date().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'})}`,
+        config: getFormConfigObject(),
+        custom: true
+      };
+      modules.unshift(newMod);
+      localStorage.setItem('media_hub_custom_modules', JSON.stringify(modules));
+      renderSavedModules();
+      showToast(`🎉 Đã lưu modul "${name.trim()}"!`);
+    }
+
+    function loadSavedModule(moduleId) {
+      const modules = getSavedModules();
+      const mod = modules.find(m => m.id === moduleId);
+      if (!mod) return;
+      if (mod.config) {
+        applyConfigToForm(mod.config);
+        saveConfig(true);
+      }
+      showToast(`⚡ Đã nạp cấu hình: ${mod.name}`);
+    }
+
+    function deleteCustomModule(moduleId, e) {
+      if (e) e.stopPropagation();
+      if (!confirm("Bạn có chắc muốn xóa modul này?")) return;
+      let modules = getSavedModules();
+      modules = modules.filter(m => m.id !== moduleId);
+      localStorage.setItem('media_hub_custom_modules', JSON.stringify(modules));
+      renderSavedModules();
+      showToast("Đã xóa modul!");
+    }
+
+    function renderSavedModules() {
+      const container = document.getElementById('savedModulesList');
+      if (!container) return;
+      const modules = getSavedModules();
+      
+      container.innerHTML = modules.map(m => {
+        return `
+          <div class="saved-mod-card" onclick="loadSavedModule('${m.id}')">
+            <div style="overflow: hidden; flex: 1;">
+              <div class="mod-title">
+                <i data-lucide="settings" style="width:13px;height:13px;color:#38bdf8;flex-shrink:0;"></i>
+                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.name}</span>
+              </div>
+              <div class="mod-sub">${m.desc || ''}</div>
+            </div>
+            ${m.custom ? `<button type="button" class="btn-del-mod" title="Xóa modul" onclick="deleteCustomModule('${m.id}', event)"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button>` : ''}
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      toast.innerText = text;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSavedConfig();
+      fetchConfigFromSheet(false);
+      renderSavedModules();
+    });
+  </script>
+</body>
+</html>

@@ -1236,45 +1236,329 @@
         justify-content: space-between;
       }
     }
+  
+    /* APP LAYOUT & SIDEBAR (UNIFIED ACROSS ALL MODULES) */
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+    }
+
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+    }
+
+    .app-sidebar {
+      width: 270px;
+      min-width: 270px;
+      background: #0e1424;
+      border-right: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 50;
+      padding: 20px 16px;
+      gap: 16px;
+    }
+
+    .app-sidebar::-webkit-scrollbar { width: 5px; }
+    .app-sidebar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .sidebar-brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(56, 189, 248, 0.25));
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #38bdf8;
+      flex-shrink: 0;
+    }
+
+    .sidebar-brand-text h2 {
+      font-size: 14px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a5b4fc 0%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-brand-text span {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .sidebar-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sidebar-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .sidebar-nav-item:hover {
+      background: rgba(99, 102, 241, 0.12);
+      color: #f1f5f9;
+      border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .sidebar-nav-item.active {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(56, 189, 248, 0.2));
+      color: #38bdf8;
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .sidebar-nav-item .mod-badge {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+    }
+
+    .sheet-link-item:hover {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px solid var(--card-border);
+      font-size: 11px;
+      color: #64748b;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .app-main {
+      flex: 1;
+      min-width: 0;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background-image: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.12), transparent 50%);
+      overflow-y: auto;
+    }
+
+    .module-header {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .module-title-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .module-icon-wrap {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(56, 189, 248, 0.25));
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #38bdf8;
+      flex-shrink: 0;
+    }
+
+    .module-header h1 {
+      font-size: 20px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a5b4fc 0%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 3px;
+    }
+
+    .module-header p {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .module-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 960px) {
+      .app-layout { flex-direction: column; }
+      .app-sidebar { width: 100%; min-width: 100%; height: auto; position: static; }
+      .app-main { padding: 16px; }
+    }
+
   </style>
 </head>
 <body>
 
-  <div class="app-container">
-
-    <!-- Top Navigation -->
-    <nav class="nav-bar">
-      <a href="gallery.html" class="nav-brand">
-        <i data-lucide="layers"></i>
-        <span>CloudVault Media & File Hub</span>
-      </a>
-      <div class="nav-links">
-        <a href="index.html" class="nav-btn">
-          <i data-lucide="upload-cloud"></i>
-          <span>Tải Lên Media</span>
-        </a>
-        <a href="gallery.html" class="nav-btn active">
-          <i data-lucide="layout-grid"></i>
-          <span>Bộ Sưu Tập & File</span>
-        </a>
-        <a href="player.html" class="nav-btn">
-          <i data-lucide="film"></i>
-          <span>Rạp Xem Video</span>
-        </a>
-        <a href="https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/edit?gid=1623547844#gid=1623547844" target="_blank" class="nav-btn sheet-btn">
-          <i data-lucide="sheet"></i>
-          <span>Google Sheet DATA</span>
-        </a>
-        <button class="nav-btn" onclick="fetchSheetData(true)">
-          <i data-lucide="refresh-cw" id="refreshIcon"></i>
-          <span>Đồng Bộ</span>
-        </button>
-        <button class="nav-btn primary-btn" onclick="openAddModal()">
-          <i data-lucide="plus"></i>
-          <span>Thêm Link</span>
-        </button>
+    <div class="app-layout">
+    <!-- 1. NƠI LƯU MODUL (Sidebar) -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand-icon">
+          <i data-lucide="layers" style="width: 22px; height: 22px;"></i>
+        </div>
+        <div class="sidebar-brand-text">
+          <h2>MEDIA CLOUD HUB</h2>
+          <span>Hệ Thống Modul & Cloud</span>
+        </div>
       </div>
-    </nav>
+
+      <div class="sidebar-group">
+        <div class="sidebar-section-title">
+          <span>1. NƠI LƯU MODUL HỆ THỐNG</span>
+        </div>
+        <nav class="sidebar-nav">
+          <a href="index.html" class="sidebar-nav-item">
+            <i data-lucide="upload-cloud" style="width: 16px; height: 16px;"></i>
+            <span>Modul Tải Lên Media</span>
+          </a>
+          <a href="gallery.html" class="sidebar-nav-item active">
+            <i data-lucide="layout-grid" style="width: 16px; height: 16px;"></i>
+            <span>Modul Bộ Sưu Tập & File</span>
+            <span class="mod-badge">Hiện Tại</span>
+          </a>
+          <a href="player.html" class="sidebar-nav-item">
+            <i data-lucide="play-circle" style="width: 16px; height: 16px;"></i>
+            <span>Modul Xem Video Từ Link</span>
+          </a>
+          <a href="config.html" class="sidebar-nav-item">
+            <i data-lucide="settings" style="width: 16px; height: 16px; color: #a5b4fc;"></i>
+            <span>Modul Cấu Hình Hệ Thống</span>
+          </a>
+          <a href="https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/edit?gid=1623547844#gid=1623547844" target="_blank" class="sidebar-nav-item sheet-link-item">
+            <i data-lucide="sheet" style="width: 16px; height: 16px; color: #34d399;"></i>
+            <span>Mở Sheet DATA</span>
+            <i data-lucide="external-link" style="width: 12px; height: 12px; margin-left: auto; color: #64748b;"></i>
+          </a>
+          <a href="https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/edit?gid=0#gid=0" target="_blank" class="sidebar-nav-item sheet-link-item">
+            <i data-lucide="database" style="width: 16px; height: 16px; color: #38bdf8;"></i>
+            <span>Mở Sheet API Cấu Hình</span>
+            <i data-lucide="external-link" style="width: 12px; height: 12px; margin-left: auto; color: #64748b;"></i>
+          </a>
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span style="display: flex; align-items: center; gap: 6px; color: #34d399; font-weight: 600;">
+            <span class="status-dot"></span> Backend Sẵn Sàng
+          </span>
+          <span style="color: #64748b; font-size: 10px;">v2.5 Pro</span>
+        </div>
+        <span style="font-size: 10px; color: #64748b;">Tự động đồng bộ Google Sheet</span>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="app-main">
+      <!-- 2. TIÊU ĐỀ MODUL -->
+      <header class="module-header">
+        <div class="module-title-box">
+          <div class="module-icon-wrap">
+            <i data-lucide="layout-grid" style="width: 26px; height: 26px;"></i>
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <h1>Modul Bộ Sưu Tập Media & File</h1>
+              <span class="badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; font-size: 11px; font-weight: 700;">
+                <i data-lucide="sheet" style="width: 13px; height: 13px;"></i>
+                <span>GOOGLE SHEET DATA</span>
+              </span>
+            </div>
+            <p>Quản lý, tìm kiếm, lọc và xem trước Ảnh, Video, Tài liệu được đồng bộ từ Sheet DATA</p>
+          </div>
+        </div>
+
+        <div class="module-header-actions">
+          <button class="sheet-status" onclick="fetchSheetData(true)" style="border: 1px solid #38bdf8; background: rgba(56, 189, 248, 0.2); color: #38bdf8; cursor: pointer; padding: 7px 14px; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+            <i data-lucide="refresh-cw" id="refreshIcon" style="width: 13px; height: 13px;"></i> Đồng Bộ
+          </button>
+          <button class="sheet-status" onclick="openAddModal()" style="border: 1px solid #10b981; background: #059669; color: white; cursor: pointer; padding: 7px 14px; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+            <i data-lucide="plus" style="width: 13px; height: 13px;"></i> Thêm Link
+          </button>
+          <a href="https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/edit?gid=1623547844#gid=1623547844" target="_blank" class="sheet-status" style="border: 1px solid rgba(16, 185, 129, 0.4); text-decoration: none; padding: 7px 14px; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+            <i data-lucide="table" style="width: 13px; height: 13px;"></i> Mở Sheet DATA
+          </a>
+        </div>
+      </header>
+
 
     <!-- Filter, Search & View Controls (Pixel-matched with media_1790319118433.png) -->
     <div class="controls-card">
@@ -1407,6 +1691,7 @@
         </div>
       </div>
     </div>
+  </main>
   </div>
 
   <!-- Video Player Modal -->

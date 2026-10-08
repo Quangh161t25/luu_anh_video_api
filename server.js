@@ -266,6 +266,16 @@ const handler = (req, res) => {
     }
   }
 
+  // Phục vụ giao diện Modul Cấu Hình Hệ Thống từ http://localhost:5000/config
+  if (req.method === 'GET' && (req.url === '/config' || req.url === '/config.html')) {
+    const configPath = path.join(__dirname, 'config.html');
+    if (fs.existsSync(configPath)) {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      fs.createReadStream(configPath).pipe(res);
+      return;
+    }
+  }
+
   // API Lấy danh sách video từ Google Sheet DATA
   if (req.method === 'GET' && req.url === '/api/get-sheet-videos') {
     getGoogleSheetRows().then(rows => {
@@ -308,6 +318,23 @@ const handler = (req, res) => {
         res.end(JSON.stringify({ status: 'error', message: err.message }));
       }
     });
+    return;
+  }
+
+  // API Lấy máy chủ DoodStream Upload (Vượt CORS)
+  if (req.method === 'GET' && req.url.startsWith('/api/dood-server')) {
+    const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const key = parsedUrl.searchParams.get('key') || '578856ivpifyyfyuloy45x';
+    fetch(`https://doodapi.co/api/upload/server?key=${key}`)
+      .then(r => r.json())
+      .then(doodData => {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify(doodData));
+      })
+      .catch(err => {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ status: 500, msg: err.message }));
+      });
     return;
   }
 
