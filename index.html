@@ -412,19 +412,32 @@
     .platform-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
+      gap: 8px;
     }
 
     .platform-card {
       background: var(--input-bg);
-      border: 2px solid var(--input-border);
-      border-radius: 12px;
-      padding: 12px 14px;
+      border: 1.5px solid var(--input-border);
+      border-radius: 10px;
+      padding: 8px 12px;
       cursor: pointer;
       display: flex;
-      flex-direction: column;
-      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
       transition: all 0.2s ease;
+    }
+
+    .platform-card:hover {
+      border-color: #6366f1;
+      background: rgba(99, 102, 241, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .platform-card.active {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.14);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
     }
 
     .platform-card:hover {
@@ -1242,6 +1255,10 @@
             <i data-lucide="play-circle" style="width: 16px; height: 16px;"></i>
             <span>Modul Xem Video Từ Link</span>
           </a>
+          <a href="config.html" class="sidebar-nav-item">
+            <i data-lucide="settings" style="width: 16px; height: 16px; color: #a5b4fc;"></i>
+            <span>Modul Cấu Hình Hệ Thống</span>
+          </a>
           <a href="https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/edit?gid=1623547844#gid=1623547844" target="_blank" class="sidebar-nav-item sheet-link-item">
             <i data-lucide="sheet" style="width: 16px; height: 16px; color: #34d399;"></i>
             <span>Mở Sheet DATA</span>
@@ -1306,134 +1323,97 @@
         </div>
 
         <div class="module-header-actions">
+          <a href="config.html" class="sheet-status" style="border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; text-decoration: none;">
+            <i data-lucide="settings" style="width: 13px; height: 13px;"></i> Modul Cấu Hình
+          </a>
           <a href="https://docs.google.com/spreadsheets/d/1eH4sA1zXZ0qd4EU0doJwgPVzffUS-NSnwxF_1a6u3ik/edit?gid=1623547844#gid=1623547844" target="_blank" class="sheet-status" style="border: 1px solid rgba(16, 185, 129, 0.4); text-decoration: none;">
             <i data-lucide="table" style="width: 13px; height: 13px;"></i> Mở Sheet DATA
           </a>
         </div>
       </header>
 
+            <!-- =================================================== -->
+      <!-- 3. NỀN TẢNG LƯU TRỮ (Nhỏ gọn) -->
       <!-- =================================================== -->
-      <!-- 3. NỀN TẢNG LƯU TRỮ -->
-      <!-- =================================================== -->
-      <section class="section-box platform-section">
-        <div class="section-header-row">
-          <div class="section-title">
-            <i data-lucide="cloud" style="width: 18px; height: 18px;"></i>
-            <span>3. Nền Tảng Lưu Trữ (Ảnh, Video, PDF):</span>
+      <section class="section-box platform-section" style="padding: 14px 18px;">
+        <div class="section-header-row" style="margin-bottom: 10px;">
+          <div class="section-title" style="font-size: 13px;">
+            <i data-lucide="cloud" style="width: 16px; height: 16px;"></i>
+            <span>3. Nền Tảng Lưu Trữ:</span>
           </div>
-          <span style="font-size: 12px; color: #94a3b8;">Nhấp để chuyển đổi nền tảng & cấu hình tương ứng</span>
+          <span style="font-size: 11px; color: #94a3b8;">Nhấp để chuyển đổi nền tảng</span>
         </div>
 
         <div class="platform-grid">
           <!-- 1. Cloudinary -->
           <div id="card-cloudinary" class="platform-card active" onclick="selectPlatform('cloudinary')">
-            <div class="platform-header">
-              <span class="platform-name">
-                <i data-lucide="sparkles" style="width: 16px; height: 16px; color: #a855f7;"></i> Cloudinary
-              </span>
-              <div style="display: flex; gap: 4px;">
-                <span class="tag tag-perm" style="background: rgba(168, 85, 247, 0.25); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.4);">📱 Mobile</span>
-                <span class="tag tag-perm">Vĩnh Viễn</span>
-              </div>
-            </div>
-            <div class="platform-desc">Tải trực tiếp 100% trên Điện thoại & PC, không lỗi CORS (Ảnh, Video &lt;100MB, PDF)</div>
+            <span class="platform-name">
+              <i data-lucide="sparkles" style="width: 15px; height: 15px; color: #a855f7;"></i> Cloudinary
+            </span>
+            <span class="tag tag-perm">Vĩnh Viễn</span>
           </div>
 
           <!-- 2. Catbox.moe -->
           <div id="card-catbox" class="platform-card" onclick="selectPlatform('catbox')">
-            <div class="platform-header">
-              <span class="platform-name">
-                <i data-lucide="cat" style="width: 16px; height: 16px; color: #f43f5e;"></i> Catbox.moe
-              </span>
-              <div style="display: flex; gap: 4px;">
-                <span class="tag tag-temp" style="background: rgba(244, 63, 94, 0.15); color: #fda4af;">🖥️ Server PC</span>
-                <span class="tag tag-perm">Vĩnh Viễn</span>
-              </div>
-            </div>
-            <div class="platform-desc">Lưu vĩnh viễn (Catbox chặn CORS từ điện thoại, cần chạy qua Server PC)</div>
+            <span class="platform-name">
+              <i data-lucide="cat" style="width: 15px; height: 15px; color: #f43f5e;"></i> Catbox.moe
+            </span>
+            <span class="tag tag-perm">Vĩnh Viễn</span>
           </div>
 
           <!-- 3. Litterbox -->
           <div id="card-litterbox" class="platform-card" onclick="selectPlatform('litterbox')">
-            <div class="platform-header">
-              <span class="platform-name">
-                <i data-lucide="clock" style="width: 16px; height: 16px; color: #facc15;"></i> Litterbox
-              </span>
-              <div style="display: flex; gap: 4px;">
-                <span class="tag tag-temp" style="background: rgba(250, 204, 21, 0.15); color: #fef08a;">🖥️ Server PC</span>
-                <span class="tag tag-temp">1 - 3 Ngày</span>
-              </div>
-            </div>
-            <div class="platform-desc">Tự hủy sau 1h, 24h, 72h (Litterbox chặn CORS từ điện thoại, cần chạy qua Server PC)</div>
+            <span class="platform-name">
+              <i data-lucide="clock" style="width: 15px; height: 15px; color: #facc15;"></i> Litterbox
+            </span>
+            <span class="tag tag-temp">1 - 3 Ngày</span>
           </div>
 
           <!-- 4. Telegram API -->
           <div id="card-telegram" class="platform-card" onclick="selectPlatform('telegram')">
-            <div class="platform-header">
-              <span class="platform-name">
-                <i data-lucide="send" style="width: 16px; height: 16px; color: #38bdf8;"></i> Telegram API
-              </span>
-              <div style="display: flex; gap: 4px;">
-                <span class="tag tag-perm" style="background: rgba(56, 189, 248, 0.2); color: #7dd3fc;">📱 Mobile (&lt;50MB)</span>
-                <span class="tag tag-perm">Vĩnh Viễn</span>
-              </div>
-            </div>
-            <div class="platform-desc">Tải trực tiếp qua Telegram Bot (Hỗ trợ tệp dưới 50MB, không giới hạn số lượng)</div>
+            <span class="platform-name">
+              <i data-lucide="send" style="width: 15px; height: 15px; color: #38bdf8;"></i> Telegram API
+            </span>
+            <span class="tag tag-perm">&lt;50MB</span>
           </div>
 
           <!-- 5. DoodStream -->
           <div id="card-doodstream" class="platform-card" onclick="selectPlatform('doodstream')">
-            <div class="platform-header">
-              <span class="platform-name">
-                <i data-lucide="play-circle" style="width: 16px; height: 16px; color: #eab308;"></i> DoodStream
-              </span>
-              <div style="display: flex; gap: 4px;">
-                <span class="tag tag-rec">⚡ Vercel/PC</span>
-                <span class="tag tag-perm">Vĩnh Viễn 100%</span>
-              </div>
-            </div>
-            <div class="platform-desc">Lưu Video/Phim lớn 500MB+ Vĩnh Viễn (Hỗ trợ Vercel Serverless & Tự động vượt CORS)</div>
+            <span class="platform-name">
+              <i data-lucide="play-circle" style="width: 15px; height: 15px; color: #eab308;"></i> DoodStream
+            </span>
+            <span class="tag tag-rec">500MB+</span>
           </div>
 
           <!-- 6. Supabase -->
           <div id="card-supabase" class="platform-card" onclick="selectPlatform('supabase')">
-            <div class="platform-header">
-              <span class="platform-name">
-                <i data-lucide="database" style="width: 16px; height: 16px; color: #10b981;"></i> Supabase
-              </span>
-              <span class="tag tag-perm">Vĩnh Viễn</span>
-            </div>
-            <div class="platform-desc">Lưu Ảnh, Video & Tài liệu trên Database PostgreSQL</div>
+            <span class="platform-name">
+              <i data-lucide="database" style="width: 15px; height: 15px; color: #10b981;"></i> Supabase
+            </span>
+            <span class="tag tag-perm">DB Cloud</span>
           </div>
 
           <!-- 7. GoFile Cloud -->
           <div id="card-gofile" class="platform-card" onclick="selectPlatform('gofile')">
-            <div class="platform-header">
-              <span class="platform-name">
-                <i data-lucide="folder-archive" style="width: 16px; height: 16px; color: #64748b;"></i> GoFile Cloud
-              </span>
-              <span class="tag tag-temp">10-30 Ngày</span>
-            </div>
-            <div class="platform-desc">Lưu file dung lượng lớn mọi định dạng không cần tài khoản</div>
+            <span class="platform-name">
+              <i data-lucide="folder-archive" style="width: 15px; height: 15px; color: #64748b;"></i> GoFile
+            </span>
+            <span class="tag tag-temp">10-30 Ngày</span>
           </div>
 
           <!-- 8. TmpFiles Cloud -->
           <div id="card-tmpfiles" class="platform-card" onclick="selectPlatform('tmpfiles')">
-            <div class="platform-header">
-              <span class="platform-name">
-                <i data-lucide="file-up" style="width: 16px; height: 16px; color: #38bdf8;"></i> TmpFiles Cloud
-              </span>
-              <div style="display: flex; gap: 4px;">
-                <span class="tag tag-perm" style="background: rgba(56, 189, 248, 0.25); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.5);">📱 Video 500MB+</span>
-                <span class="tag tag-perm" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">⚡ Đến 5GB</span>
-              </div>
-            </div>
-            <div class="platform-desc">Tải video/tệp lớn 500MB, 1GB, 2GB đến 5GB trực tiếp 100% trên điện thoại không lỗi CORS</div>
+            <span class="platform-name">
+              <i data-lucide="file-up" style="width: 15px; height: 15px; color: #38bdf8;"></i> TmpFiles
+            </span>
+            <span class="tag tag-perm" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">Đến 5GB</span>
           </div>
         </div>
       </section>
 
-      <!-- =================================================== -->
+      <!-- Hidden Store for Configuration (Config module is moved to config.html) -->
+      <div id="hiddenConfigStore" style="display: none;">
+<!-- =================================================== -->
       <!-- 4. CẤU HÌNH -->
       <!-- =================================================== -->
       <section class="section-box config-section">
@@ -1594,6 +1574,7 @@
           </div>
         </div>
       </section>
+      </div>
 
       <!-- =================================================== -->
       <!-- BOTTOM GRID: 5. NƠI TẢI ẢNH LÊN & 6. NƠI CHỨA LINK ẢNH -->

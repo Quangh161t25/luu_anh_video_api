@@ -30,6 +30,14 @@ module.exports = (req, res) => {
     }
   }
 
+  if (url === '/config' || url === '/config.html') {
+    const filePath = path.join(__dirname, 'config.html');
+    if (fs.existsSync(filePath)) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.end(fs.readFileSync(filePath));
+    }
+  }
+
   // Xử lý các request API
   return apiHandler(req, res);
 };
