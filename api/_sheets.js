@@ -205,7 +205,12 @@ async function saveGoogleSheetConfig(configObj) {
       dood_key: 'DoodStream API Key',
       sb_url: 'Supabase Project URL (https://xyz.supabase.co)',
       sb_key: 'Supabase Anon Public Key',
-      sheet_webapp_url: 'Google Apps Script WebApp URL (Dự phòng)'
+      sheet_webapp_url: 'Google Apps Script WebApp URL (Dự phòng)',
+      gh_token: 'GitHub Personal Access Token (PAT)',
+      gh_repo: 'GitHub Repository (owner/repo)',
+      gh_branch: 'GitHub Branch (Nhánh)',
+      gh_path: 'GitHub Folder lưu trữ',
+      gh_cdn: 'GitHub Direct Link CDN (jsdelivr / raw)'
     };
 
     // Đọc trước để giữ lại mô tả của các key tùy chỉnh khác

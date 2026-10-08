@@ -276,6 +276,52 @@ const handler = (req, res) => {
     }
   }
 
+  // API Upload ảnh/video trực tiếp lên GitHub Repo qua Server
+  if (req.method === 'POST' && req.url.startsWith('/api/github-upload')) {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body);
+        const { token, repo, branch, path: filePath, content, message } = payload;
+        
+        if (!token || !repo || !filePath || !content) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          return res.end(JSON.stringify({ status: 'error', message: 'Thiếu thông tin upload GitHub' }));
+        }
+
+        const ghRes = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${token}`,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json',
+            'User-Agent': 'Media-Cloud-Hub-App'
+          },
+          body: JSON.stringify({
+            message: message || `Upload media: ${filePath}`,
+            content: content,
+            branch: branch || 'main'
+          })
+        });
+
+        const ghData = await ghRes.json();
+        if (ghRes.ok) {
+          const cdnUrl = `https://cdn.jsdelivr.net/gh/${repo}@${branch || 'main'}/${filePath}`;
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ status: 'success', data: ghData, url: cdnUrl }));
+        } else {
+          res.writeHead(ghRes.status, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ status: 'error', message: ghData.message || 'Lỗi từ GitHub API' }));
+        }
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ status: 'error', message: err.message }));
+      }
+    });
+    return;
+  }
+
   // API Lấy danh sách video từ Google Sheet DATA
   if (req.method === 'GET' && req.url === '/api/get-sheet-videos') {
     getGoogleSheetRows().then(rows => {

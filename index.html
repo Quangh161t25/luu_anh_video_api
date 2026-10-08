@@ -411,7 +411,7 @@
     /* 3. NỀN TẢNG LƯU TRỮ GRID */
     .platform-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 8px;
     }
 
@@ -1408,6 +1408,14 @@
             </span>
             <span class="tag tag-perm" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">Đến 5GB</span>
           </div>
+
+          <!-- 9. GitHub Repository -->
+          <div id="card-github" class="platform-card" onclick="selectPlatform('github')">
+            <span class="platform-name">
+              <i data-lucide="github" style="width: 15px; height: 15px; color: #f8fafc;"></i> GitHub
+            </span>
+            <span class="tag tag-perm" style="background: rgba(255, 255, 255, 0.15); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.3);">Git Repo</span>
+          </div>
         </div>
       </section>
 
@@ -1570,6 +1578,34 @@
               <p style="font-size: 12px; color: #34d399; margin-top: 6px;">
                 ✅ <strong>Tải tệp lớn không cần tài khoản:</strong> Hỗ trợ tải các tệp video/file 500MB, 1GB, 2GB lên đến 5GB trực tiếp 100% từ điện thoại và máy tính, tốc độ cực nhanh và tự động lưu vào Google Sheet <code>DATA</code>!
               </p>
+            </div>
+
+            <!-- 9. Config GitHub -->
+            <div id="config-github" class="config-box">
+              <h4><i data-lucide="github" style="width: 14px; height: 14px; color: #f8fafc;"></i> Cấu hình GitHub Repository (Lưu Trữ Git Vĩnh Viễn):</h4>
+              <div class="form-group">
+                <label>GitHub Personal Access Token (PAT):</label>
+                <input type="password" id="gh_token" placeholder="ghp_xxxxxxxxxxxx..." onchange="saveConfig()">
+              </div>
+              <div class="form-group">
+                <label>Repository (owner/repo):</label>
+                <input type="text" id="gh_repo" placeholder="vd: Quangh161t25/luu_anh_video_api" value="Quangh161t25/luu_anh_video_api" onchange="saveConfig()">
+              </div>
+              <div class="form-group">
+                <label>Branch:</label>
+                <input type="text" id="gh_branch" placeholder="vd: main" value="main" onchange="saveConfig()">
+              </div>
+              <div class="form-group">
+                <label>Folder lưu trữ:</label>
+                <input type="text" id="gh_path" placeholder="vd: uploads" value="uploads" onchange="saveConfig()">
+              </div>
+              <div class="form-group">
+                <label>Định dạng Direct Link:</label>
+                <select id="gh_cdn" onchange="saveConfig()">
+                  <option value="jsdelivr" selected>⚡ jsDelivr CDN (Siêu tốc, khuyên dùng)</option>
+                  <option value="raw">🔗 Raw GitHub Usercontent</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -1766,6 +1802,11 @@
         dood_key: document.getElementById('dood_key')?.value.trim() || '',
         sb_url: document.getElementById('sb_url')?.value.trim() || '',
         sb_key: document.getElementById('sb_key')?.value.trim() || '',
+        gh_token: document.getElementById('gh_token')?.value.trim() || '',
+        gh_repo: document.getElementById('gh_repo')?.value.trim() || 'Quangh161t25/luu_anh_video_api',
+        gh_branch: document.getElementById('gh_branch')?.value.trim() || 'main',
+        gh_path: document.getElementById('gh_path')?.value.trim() || 'uploads',
+        gh_cdn: document.getElementById('gh_cdn')?.value.trim() || 'jsdelivr'
       };
     }
 
@@ -1781,6 +1822,11 @@
       if (config.dood_key !== undefined && document.getElementById('dood_key')) document.getElementById('dood_key').value = config.dood_key;
       if (config.sb_url !== undefined && document.getElementById('sb_url')) document.getElementById('sb_url').value = config.sb_url;
       if (config.sb_key !== undefined && document.getElementById('sb_key')) document.getElementById('sb_key').value = config.sb_key;
+      if (config.gh_token !== undefined && document.getElementById('gh_token')) document.getElementById('gh_token').value = config.gh_token;
+      if (config.gh_repo !== undefined && document.getElementById('gh_repo')) document.getElementById('gh_repo').value = config.gh_repo;
+      if (config.gh_branch !== undefined && document.getElementById('gh_branch')) document.getElementById('gh_branch').value = config.gh_branch;
+      if (config.gh_path !== undefined && document.getElementById('gh_path')) document.getElementById('gh_path').value = config.gh_path;
+      if (config.gh_cdn !== undefined && document.getElementById('gh_cdn')) document.getElementById('gh_cdn').value = config.gh_cdn;
     }
 
     function saveConfig(autoSyncSheet = true) {
@@ -1862,7 +1908,12 @@
       tg_chatid: '-1004258626019',
       dood_key: '578856ivpifyyfyuloy45x',
       sb_url: '',
-      sb_key: ''
+      sb_key: '',
+      gh_token: '',
+      gh_repo: 'Quangh161t25/luu_anh_video_api',
+      gh_branch: 'main',
+      gh_path: 'uploads',
+      gh_cdn: 'jsdelivr'
     };
 
     function loadSavedConfig() {
@@ -2142,6 +2193,7 @@
         case 'supabase': platformName = "Supabase Storage (Vĩnh Viễn)"; break;
         case 'gofile': platformName = "GoFile Cloud (10-30 Ngày)"; break;
         case 'tmpfiles': platformName = "TmpFiles Cloud (Lên Đến 5GB)"; break;
+        case 'github': platformName = "GitHub Repository (Git Vĩnh Viễn)"; break;
       }
 
       let successCount = 0;
@@ -2217,6 +2269,7 @@
               case 'supabase': url = await uploadSupabase(item.file, onProg); break;
               case 'gofile': url = await uploadGoFile(item.file, onProg); break;
               case 'tmpfiles': url = await uploadTmpFiles(item.file, onProg); break;
+              case 'github': url = await uploadGithub(item.file, onProg); break;
             }
 
             if (url) {
@@ -3011,7 +3064,8 @@
       { id: 'mod-catbox', name: 'Modul Catbox Vĩnh Viễn', platform: 'catbox', desc: 'Lưu vĩnh viễn không giới hạn' },
       { id: 'mod-dood', name: 'Modul Video DoodStream', platform: 'doodstream', desc: 'Chuyên Video & Phim lớn 500MB+' },
       { id: 'mod-tmpfiles', name: 'Modul TmpFiles Cực Nhanh', platform: 'tmpfiles', desc: 'Tải file nặng lên đến 5GB' },
-      { id: 'mod-tele', name: 'Modul Telegram Cloud Bot', platform: 'telegram', desc: 'Lưu qua Bot Telegram cá nhân' }
+      { id: 'mod-tele', name: 'Modul Telegram Cloud Bot', platform: 'telegram', desc: 'Lưu qua Bot Telegram cá nhân' },
+      { id: 'mod-github', name: 'Modul GitHub Media Git', platform: 'github', desc: 'Lưu ảnh, video trực tiếp lên Git Repo' }
     ];
 
     function getSavedModules() {
@@ -3200,6 +3254,140 @@
       localStorage.removeItem('media_hub_recent_links');
       updateResultViewState();
       showToast("Đã làm mới danh sách link!");
+    }
+
+    
+    // ==========================================
+    // 9. UPLOAD LÊN GITHUB REPOSITORY (GIT VĨNH VIỄN)
+    // ==========================================
+    function uploadGithub(file, onProgress) {
+      return new Promise(async (resolve, reject) => {
+        try {
+          const config = getFormConfigObject();
+          const token = config.gh_token || localStorage.getItem('gh_token') || '';
+          const repoFull = config.gh_repo || 'Quangh161t25/luu_anh_video_api';
+          const branch = config.gh_branch || 'main';
+          const folder = (config.gh_path || 'uploads').replace(/^\/+|\/+$/g, '');
+          const cdnType = config.gh_cdn || 'jsdelivr';
+
+          if (!token) {
+            const err = new Error("Chưa cấu hình GitHub Token (PAT)!");
+            err.hint = "Vui lòng vào 'Modul Cấu Hình Hệ Thống' để nhập GitHub Personal Access Token (PAT) có quyền repo.";
+            return reject(err);
+          }
+
+          if (file.size > 25 * 1024 * 1024) {
+            const err = new Error(`Tệp "${file.name}" dung lượng ${(file.size / 1024 / 1024).toFixed(1)}MB vượt quá giới hạn 25MB của GitHub Contents API!`);
+            err.hint = "GitHub REST API giới hạn 25MB/tệp. Đối với video hoặc tệp lớn hơn 25MB, bạn vui lòng chọn nền tảng TmpFiles (tối đa 5GB) hoặc Catbox (tối đa 200MB).";
+            return reject(err);
+          }
+
+          onProgress(15);
+
+          // Định danh file kèm mốc thời gian để chống trùng lặp commit
+          const now = new Date();
+          const timePrefix = now.getFullYear() +
+            String(now.getMonth() + 1).padStart(2, '0') +
+            String(now.getDate()).padStart(2, '0') + '_' +
+            String(now.getHours()).padStart(2, '0') +
+            String(now.getMinutes()).padStart(2, '0') +
+            String(now.getSeconds()).padStart(2, '0');
+          
+          const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+          const targetFilePath = `${folder}/${timePrefix}_${cleanFileName}`;
+
+          // Đọc file sang Base64
+          onProgress(35);
+          const base64Content = await new Promise((resB64, rejB64) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const res = reader.result;
+              const b64 = res.split(',')[1];
+              resB64(b64);
+            };
+            reader.onerror = rejB64;
+            reader.readAsDataURL(file);
+          });
+
+          onProgress(60);
+
+          // 1. Gọi trực tiếp GitHub Contents API (Hỗ trợ CORS 100%)
+          const apiUrl = `https://api.github.com/repos/${repoFull}/contents/${targetFilePath}`;
+          const payload = {
+            message: `Upload media: ${file.name} via Media Cloud Hub`,
+            content: base64Content,
+            branch: branch
+          };
+
+          let directUrl = "";
+          let success = false;
+
+          try {
+            const res = await fetch(apiUrl, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `token ${token}`,
+                'Accept': 'application/vnd.github+json',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(payload)
+            });
+
+            const resData = await res.json();
+            if (res.ok) {
+              success = true;
+              if (cdnType === 'jsdelivr') {
+                directUrl = `https://cdn.jsdelivr.net/gh/${repoFull}@${branch}/${targetFilePath}`;
+              } else {
+                directUrl = resData.content?.download_url || `https://raw.githubusercontent.com/${repoFull}/${branch}/${targetFilePath}`;
+              }
+            } else {
+              // Nếu gặp lỗi quyền hạn hoặc token
+              if (res.status === 401 || res.status === 403) {
+                const err = new Error(resData.message || "Lỗi xác thực GitHub Token");
+                err.hint = "GitHub Token không có quyền ghi vào Repo. Hãy tạo Token mới có tích chọn quyền 'repo'.";
+                return reject(err);
+              }
+              throw new Error(resData.message || `Lỗi GitHub (${res.status})`);
+            }
+          } catch (directErr) {
+            console.warn("Lỗi gọi direct GitHub, thử qua server proxy:", directErr);
+            // 2. Fallback qua Proxy Server backend nếu có
+            const base = getApiBase();
+            const proxyRes = await fetch(`${base}/api/github-upload`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                token: token,
+                repo: repoFull,
+                branch: branch,
+                path: targetFilePath,
+                content: base64Content,
+                message: `Upload media: ${file.name}`
+              })
+            });
+
+            const proxyData = await proxyRes.json();
+            if (proxyRes.ok && proxyData.status === 'success') {
+              success = true;
+              directUrl = proxyData.url || `https://cdn.jsdelivr.net/gh/${repoFull}@${branch}/${targetFilePath}`;
+            } else {
+              const err = new Error(proxyData.message || directErr.message || "Không thể tải lên GitHub");
+              err.hint = "Kiểm tra lại GitHub Token và tên Repository trong Modul Cấu Hình.";
+              return reject(err);
+            }
+          }
+
+          if (success && directUrl) {
+            onProgress(100);
+            resolve(directUrl);
+          } else {
+            reject(new Error("Không tạo được liên kết từ GitHub"));
+          }
+        } catch (err) {
+          reject(err);
+        }
+      });
     }
 
     function showToast(text) {

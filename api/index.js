@@ -140,6 +140,60 @@ module.exports = async (req, res) => {
     return;
   }
 
+  // 7. GitHub Upload Media Direct API
+  if (url.includes('/github-upload')) {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    try {
+      let payload = req.body;
+      if (!payload) {
+        payload = await new Promise((resolve) => {
+          let raw = '';
+          req.on('data', chunk => raw += chunk);
+          req.on('end', () => {
+            try { resolve(JSON.parse(raw || '{}')); } catch(e) { resolve({}); }
+          });
+        });
+      } else if (typeof payload === 'string') {
+        try { payload = JSON.parse(payload); } catch(e) { payload = {}; }
+      }
+
+      const { token, repo, branch, path: filePath, content, message } = payload;
+      if (!token || !repo || !filePath || !content) {
+        res.statusCode = 400;
+        return res.end(JSON.stringify({ status: 'error', message: 'Thiếu thông tin upload GitHub' }));
+      }
+
+      const ghRes = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+          'User-Agent': 'Media-Cloud-Hub-App'
+        },
+        body: JSON.stringify({
+          message: message || `Upload media: ${filePath}`,
+          content: content,
+          branch: branch || 'main'
+        })
+      });
+
+      const ghData = await ghRes.json();
+      if (ghRes.ok) {
+        const cdnUrl = `https://cdn.jsdelivr.net/gh/${repo}@${branch || 'main'}/${filePath}`;
+        res.statusCode = 200;
+        res.end(JSON.stringify({ status: 'success', data: ghData, url: cdnUrl }));
+      } else {
+        res.statusCode = ghRes.status;
+        res.end(JSON.stringify({ status: 'error', message: ghData.message || 'Lỗi từ GitHub API' }));
+      }
+    } catch (err) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ status: 'error', message: err.message }));
+    }
+    return;
+  }
+
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.statusCode = 200;
   res.end(JSON.stringify({ status: 'ok', message: 'Vercel Serverless Function Ready' }));
