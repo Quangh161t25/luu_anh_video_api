@@ -158,7 +158,12 @@ async function getGoogleSheetConfig() {
         const config = {};
         data.values.forEach(row => {
           if (row[0]) {
-            config[row[0].trim()] = (row[1] !== undefined && row[1] !== null) ? row[1].trim() : '';
+            const key = row[0].trim();
+            const val = (row[1] !== undefined && row[1] !== null) ? row[1].trim() : '';
+            // CHỈ trả về key nếu có giá trị thực sự (không rỗng), tránh ghi đè làm mất config mặc định
+            if (val !== '') {
+              config[key] = val;
+            }
           }
         });
         return config;
@@ -177,7 +182,11 @@ async function getGoogleSheetConfig() {
         if (!line) continue;
         const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
         if (cols.length >= 2 && cols[0]) {
-          config[cols[0]] = cols[1] || '';
+          const key = cols[0];
+          const val = cols[1] || '';
+          if (val !== '') {
+            config[key] = val;
+          }
         }
       }
       return config;
@@ -213,14 +222,20 @@ async function saveGoogleSheetConfig(configObj) {
       gh_cdn: 'GitHub Direct Link CDN (jsdelivr / raw)'
     };
 
-    // Đọc trước để giữ lại mô tả của các key tùy chỉnh khác
+    // ĐỌC DỮ LIỆU HIỆN CÓ TRÊN SHEET ĐỂ BẢO VỆ GIÁ TRỊ CŨ (CHỐNG MẤT DỮ LIỆU)
+    const existingConfig = {};
     try {
       const readUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${API_SHEET_NAME}!A2:D50`;
       const readRes = await fetch(readUrl, { headers: { Authorization: `Bearer ${token}` } });
       const readData = await readRes.json();
       if (readData.values) {
         readData.values.forEach(r => {
-          if (r[0] && r[2]) descMap[r[0].trim()] = r[2].trim();
+          if (r[0]) {
+            const k = r[0].trim();
+            const v = (r[1] !== undefined && r[1] !== null) ? r[1].trim() : '';
+            if (v !== '') existingConfig[k] = v;
+            if (r[2]) descMap[k] = r[2].trim();
+          }
         });
       }
     } catch(e) {}
@@ -234,17 +249,29 @@ async function saveGoogleSheetConfig(configObj) {
     const ss = String(nowObj.getSeconds()).padStart(2, '0');
     const timeStr = `${d}/${m}/${y} ${hh}:${mm}:${ss}`;
 
-    const keys = Object.keys(descMap);
-    // Thêm các key mới nếu có trong configObj
+    // Hợp nhất thông minh: Giá trị mới không rỗng sẽ cập nhật. Nếu giá trị mới rỗng thì GIỮ NGUYÊN giá trị cũ trên Sheet!
+    const finalConfig = Object.assign({}, existingConfig);
     if (configObj && typeof configObj === 'object') {
-      Object.keys(configObj).forEach(k => {
-        if (!keys.includes(k)) keys.push(k);
-      });
+      for (const [k, v] of Object.entries(configObj)) {
+        if (v !== undefined && v !== null) {
+          const s = String(v).trim();
+          if (s === '__CLEAR__') {
+            finalConfig[k] = '';
+          } else if (s !== '') {
+            finalConfig[k] = s;
+          }
+        }
+      }
     }
+
+    const keys = Object.keys(descMap);
+    Object.keys(finalConfig).forEach(k => {
+      if (!keys.includes(k)) keys.push(k);
+    });
 
     const rows = [['key', 'value', 'mo_ta', 'ngay_cap_nhat']];
     keys.forEach(k => {
-      const val = (configObj && configObj[k] !== undefined && configObj[k] !== null) ? String(configObj[k]) : '';
+      const val = finalConfig[k] || '';
       const desc = descMap[k] || 'Cấu hình API';
       rows.push([k, val, desc, timeStr]);
     });

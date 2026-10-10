@@ -881,16 +881,9 @@
       applyConfigToForm(config);
     }
 
-    function saveConfig(autoSyncSheet = true) {
+    function saveConfig() {
       const config = getFormConfigObject();
       localStorage.setItem('media_hub_config_v2', JSON.stringify(config));
-
-      if (autoSyncSheet) {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => {
-          saveConfigToGoogleSheet(false);
-        }, 1500);
-      }
     }
 
     async function saveConfigToGoogleSheet(showToastAlert = true) {
@@ -970,7 +963,7 @@
             const res = await fetch(ep);
             if (res.ok) {
               const resJson = await res.json();
-              if (resJson.status === 'success' && resJson.data) {
+              if (resJson.status === 'success' && resJson.data && Object.keys(resJson.data).length > 0) {
                 loadedData = resJson.data;
                 break;
               }
@@ -978,11 +971,28 @@
           } catch(e) {}
         }
 
-        if (loadedData) {
-          applyConfigToForm(loadedData);
-          localStorage.setItem('media_hub_config_v2', JSON.stringify(loadedData));
+        if (loadedData && Object.keys(loadedData).length > 0) {
+          // Lọc bỏ các giá trị rỗng từ Sheet để không ghi đè mất cấu hình mặc định
+          const cleanedSheet = {};
+          for (const [k, v] of Object.entries(loadedData)) {
+            if (v !== undefined && v !== null && String(v).trim() !== '') {
+              cleanedSheet[k] = String(v).trim();
+            }
+          }
+
+          let localSaved = {};
+          try {
+            const raw = localStorage.getItem('media_hub_config_v2') || localStorage.getItem('media_hub_config');
+            if (raw) localSaved = JSON.parse(raw);
+          } catch(e) {}
+
+          const merged = Object.assign({}, DEFAULT_CONFIG, localSaved, cleanedSheet);
+          applyConfigToForm(merged);
+          localStorage.setItem('media_hub_config_v2', JSON.stringify(merged));
+
+          const nowStr = new Date().toLocaleTimeString('vi-VN');
           if (statusEl) {
-            statusEl.innerHTML = `<i data-lucide="check-circle-2" style="width:18px;height:18px;color:#34d399;"></i> <span style="color:#34d399;">Đã đồng bộ từ Google Sheet [API] (${new Date().toLocaleTimeString('vi-VN')})</span>`;
+            statusEl.innerHTML = `<i data-lucide="check-circle-2" style="width:18px;height:18px;color:#34d399;"></i> <span style="color:#34d399;">Đã đồng bộ từ Google Sheet [API] (${nowStr})</span>`;
             lucide.createIcons();
           }
           if (showToastAlert) showToast('✅ Đã nạp cấu hình mới nhất từ Google Sheet [API]!');

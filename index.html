@@ -1829,16 +1829,9 @@
       if (config.gh_cdn !== undefined && document.getElementById('gh_cdn')) document.getElementById('gh_cdn').value = config.gh_cdn;
     }
 
-    function saveConfig(autoSyncSheet = true) {
+    function saveConfig() {
       const config = getFormConfigObject();
       localStorage.setItem('media_hub_config_v2', JSON.stringify(config));
-
-      if (autoSyncSheet) {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => {
-          saveConfigToGoogleSheet(false);
-        }, 1500);
-      }
     }
 
     async function saveConfigToGoogleSheet(showToastAlert = true) {
@@ -1963,7 +1956,21 @@
         }
 
         if (sheetConfig && Object.keys(sheetConfig).length > 0) {
-          const merged = Object.assign({}, DEFAULT_CONFIG, sheetConfig);
+          // Lọc bỏ các giá trị rỗng từ Sheet để không ghi đè làm mất cấu hình mặc định
+          const cleanedSheet = {};
+          for (const [k, v] of Object.entries(sheetConfig)) {
+            if (v !== undefined && v !== null && String(v).trim() !== '') {
+              cleanedSheet[k] = String(v).trim();
+            }
+          }
+
+          let localSaved = {};
+          try {
+            const raw = localStorage.getItem('media_hub_config_v2') || localStorage.getItem('media_hub_config');
+            if (raw) localSaved = JSON.parse(raw);
+          } catch(e) {}
+
+          const merged = Object.assign({}, DEFAULT_CONFIG, localSaved, cleanedSheet);
           applyConfigToForm(merged);
           localStorage.setItem('media_hub_config_v2', JSON.stringify(merged));
 
